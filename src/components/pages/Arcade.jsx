@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Arcade.css';
+import '../styles/ArcadeMode.css';
 import ArcadeMode from './ArcadeMode';
 import Apple1 from '../../images/apple1.svg';
 import Apple2 from '../../images/apple2.svg';
@@ -75,8 +75,6 @@ function Arcade() {
 
   return (
     <div className="arcade-container">
-      <h1 className="arcade-title">아케이드 모드</h1>
-      <button className="back-button" onClick={handleBack}>메인으로 돌아가기</button>
       <div className="game-container">
         {renderGameContent()}
       </div>
@@ -85,6 +83,7 @@ function Arcade() {
           모드 선택으로 돌아가기
         </button>
       )}
+      <button className="back-button" onClick={handleBack}>메인으로 돌아가기</button>
     </div>
   );
 }
