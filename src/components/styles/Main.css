@@ -11,7 +11,7 @@
 .main-title {
   font-size: 80px;
   font-weight: 700;
-  color: #F2FDEF;
+  color: white;
   margin-bottom: 80px;
   text-align: center;
   letter-spacing: -0.02em;
@@ -26,7 +26,7 @@
 .game-mode {
   width: 400px;
   height: 160px;
-  background: #F2FDEF;
+  background: white;
   border-radius: 24px;
   display: flex;
   flex-direction: row;

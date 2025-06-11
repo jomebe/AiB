@@ -65,7 +65,6 @@ function Classic() {
 
   return (
     <div className="classic-container">
-      <h1 className="classic-title">클래식 모드</h1>
       <div className="game-container">
         {renderGameContent()}
       </div>
