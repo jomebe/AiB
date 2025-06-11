@@ -34,10 +34,10 @@ function Classic() {
             <div className="apple-item"><img src={Apple5} alt="5" /></div>
             <div className="apple-item"><img src={Apple7} alt="7" /></div>
             <div className="apple-item"><img src={Apple6} alt="6" /></div>
-            <div className="apple-item"><img src={Apple3} alt="3" /></div>
             <div className="apple-item"><img src={Apple2} alt="2" /></div>
             <div className="apple-item"><img src={Apple1} alt="1" /></div>
             <div className="apple-item"><img src={Apple4} alt="4" /></div>
+            <div className="apple-item"><img src={Apple3} alt="3" /></div>
           </div>
           <div className="mode-title">Classic Apple</div>
         </div>
