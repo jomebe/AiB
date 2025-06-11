@@ -1,45 +1,142 @@
-.game-board {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 10px;
+.classic-mode-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 1400px; /* 더 넓은 컨테이너 */
+  margin: 0 auto;
+}
+
+.game-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
-.apple-container {
-  width: 50px;
-  height: 50px;
+.game-header h1 {
+  color: #333;
+  margin: 0;
+}
+
+.game-board {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  grid-auto-flow: row;
+  gap: 8px; /* 간격 늘림 */
+  padding: 20px;
+  background: #e8f5e9;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  position: relative;
+  overflow: visible;
+  width: 100%;
+  max-width: 1200px; /* 더 넓게 */
+  min-height: 580px; /* 최소 높이 지정 */
+}
+
+.board-cell {
+  width: 100%;
+  height: 100%;
+  min-width: 45px; /* 최소 너비 지정 */
+  min-height: 45px; /* 최소 높이 지정 */
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.1s ease;
+  aspect-ratio: 1 / 1; /* 정사각형 셀 */
+}
+
+.apple-cell {
   cursor: pointer;
   user-select: none;
-  transition: transform 0.1s ease;
+}
+
+.empty-cell {
+  background-color: rgba(200, 200, 200, 0.1);
+  border: 1px dashed #ccc;
+  border-radius: 5px;
 }
 
 .apple-image {
   width: 100%;
   height: 100%;
+  max-width: 45px; /* 최대 너비 */
+  max-height: 45px; /* 최대 높이 */
   position: absolute;
   top: 0;
   left: 0;
+  pointer-events: none; /* 이미지는 드래그 안됨 */
+  object-fit: contain; /* 이미지가 잘리지 않게 */
 }
 
-.apple-container:hover {
-  transform: scale(1.1);
+.apple-cell.selected {
+  transform: scale(0.9);
+  opacity: 0.7;
+}
+
+/* 선택 상자 스타일 */
+.selection-box {
+  position: absolute;
+  border: 2px solid #e74c3c;
+  background-color: rgba(231, 76, 60, 0.1);
+  z-index: 10;
+  pointer-events: none;
 }
 
 .score-display {
   font-size: 24px;
-  margin-bottom: 20px;
   color: #333;
   font-weight: bold;
   background-color: white;
   padding: 10px 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.game-controls button {
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.game-controls button:hover {
+  background-color: #388e3c;
+}
+
+/* 애니메이션 */
+@keyframes jumpingApple {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0); }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .game-board {
+    grid-template-columns: repeat(15, 1fr);
+    gap: 4px;
+    padding: 10px;
+  }
+  
+  .board-cell {
+    min-width: 35px;
+    min-height: 35px;
+  }
 } 
