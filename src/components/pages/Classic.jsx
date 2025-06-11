@@ -66,7 +66,6 @@ function Classic() {
   return (
     <div className="classic-container">
       <h1 className="classic-title">클래식 모드</h1>
-      <button className="back-button" onClick={handleBack}>메인으로 돌아가기</button>
       <div className="game-container">
         {renderGameContent()}
       </div>
@@ -75,6 +74,7 @@ function Classic() {
           모드 선택으로 돌아가기
         </button>
       )}
+      <button className="back-button" onClick={handleBack}>메인으로 돌아가기</button>
     </div>
   );
 }

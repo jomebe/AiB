@@ -6,21 +6,23 @@
   min-height: 100vh;
   background: #DDF5D1;
   font-family: "Wanted Sans Variable", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-  padding: 40px 20px;
+  padding: 100px 20px;
 }
+
+/* .main-container {} */
 
 .classic-title {
   font-size: 60px;
   font-weight: 700;
   color: #F2FDEF;
-  margin-bottom: 40px;
+  /* margin-bottom: 40px; */
   text-align: center;
   letter-spacing: -0.02em;
   text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.1);
 }
 
 .back-button {
-  background: #F2FDEF;
+  /* background: #F2FDEF; */
   border: none;
   border-radius: 12px;
   padding: 12px 24px;
@@ -39,10 +41,10 @@
 .game-container {
   width: 90%;
   max-width: 1200px;
-  background: #F2FDEF;
+  /* background: #F2FDEF; */
   border-radius: 24px;
   padding: 40px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); */
   min-height: 600px;
   display: flex;
   flex-direction: column;
@@ -70,7 +72,7 @@
   padding: 20px;
   cursor: pointer;
   transition: transform 0.2s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); */
 }
 
 .mode-card:hover {
@@ -80,7 +82,7 @@
 .mode-title {
   font-size: 28px;
   font-weight: 600;
-  margin-top: 30px;
+  margin-top: 20px;
   color: #333;
 }
 
