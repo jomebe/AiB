@@ -33,9 +33,19 @@
   transform: scale(1.1);
 }
 
-.score-display {
-  font-size: 24px;
+.apple-container.golden .apple-image {
+  filter: brightness(1.2);
+}
+
+.arcade-header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
   margin-bottom: 20px;
+}
+
+.score-display, .time-display, .mode-display {
+  font-size: 24px;
   color: #333;
   font-weight: bold;
   background-color: white;

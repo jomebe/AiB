@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Classic.css';
 import ClassicMode from './ClassicMode';
+import Apple1 from '../../images/apple1.svg';
+import Apple2 from '../../images/apple2.svg';
+import Apple3 from '../../images/apple3.svg';
+import Apple4 from '../../images/apple4.svg';
+import Apple5 from '../../images/apple5.svg';
+import Apple6 from '../../images/apple6.svg';
+import Apple7 from '../../images/apple7.svg';
 
 function Classic() {
   const navigate = useNavigate();
@@ -24,27 +31,27 @@ function Classic() {
       <div className="mode-selection-container">
         <div className="mode-card" onClick={handleClassicApple}>
           <div className="apple-grid">
-            <div className="apple-item">5</div>
-            <div className="apple-item">7</div>
-            <div className="apple-item">6</div>
-            <div className="apple-item">3</div>
-            <div className="apple-item">2</div>
-            <div className="apple-item">1</div>
-            <div className="apple-item">4</div>
+            <div className="apple-item"><img src={Apple5} alt="5" /></div>
+            <div className="apple-item"><img src={Apple7} alt="7" /></div>
+            <div className="apple-item"><img src={Apple6} alt="6" /></div>
+            <div className="apple-item"><img src={Apple3} alt="3" /></div>
+            <div className="apple-item"><img src={Apple2} alt="2" /></div>
+            <div className="apple-item"><img src={Apple1} alt="1" /></div>
+            <div className="apple-item"><img src={Apple4} alt="4" /></div>
           </div>
           <div className="mode-title">Classic Apple</div>
         </div>
         <div className="mode-card" onClick={handleTimeAttack}>
           <div className="apple-grid time-attack-grid">
-            <div className="apple-item">5</div>
-            <div className="apple-item">3</div>
-            <div className="apple-item">6</div>
-            <div className="apple-item">7</div>
-            <div className="apple-item">8</div>
-            <div className="apple-item">2</div>
-            <div className="apple-item">3</div>
-            <div className="apple-item">1</div>
-            <div className="apple-item">2</div>
+            <div className="apple-item"><img src={Apple5} alt="5" /></div>
+            <div className="apple-item"><img src={Apple3} alt="3" /></div>
+            <div className="apple-item"><img src={Apple6} alt="6" /></div>
+            <div className="apple-item"><img src={Apple7} alt="7" /></div>
+            <div className="apple-item"><img src={Apple2} alt="8" /></div>
+            <div className="apple-item"><img src={Apple2} alt="2" /></div>
+            <div className="apple-item"><img src={Apple3} alt="3" /></div>
+            <div className="apple-item"><img src={Apple1} alt="1" /></div>
+            <div className="apple-item"><img src={Apple2} alt="2" /></div>
           </div>
           <div className="mode-title">Time Attack</div>
         </div>

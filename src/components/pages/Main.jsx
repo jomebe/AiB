@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import RedApple from '../../images/apples.svg';
-import GoldenApple from '../../images/goldenapples.svg';
+import RedApple from '../../images/appleDefault.svg';
+import GoldenApple from '../../images/goldenapple.svg';
 import '../styles/Main.css';
 
 function Main() {
