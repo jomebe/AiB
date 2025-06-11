@@ -2,14 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import RedApple from '../../images/apples.svg';
 import GoldenApple from '../../images/goldenapples.svg';
-import {
-  Container,
-  Title,
-  GameModeContainer,
-  GameMode,
-  AppleIcon,
-  ModeName
-} from '../styles/Main.styles';
+import '../styles/Main.css';
 
 function Main() {
   const navigate = useNavigate();
@@ -23,19 +16,19 @@ function Main() {
   };
 
   return (
-    <Container>
-      <Title>APPLE IS BETTER</Title>
-      <GameModeContainer>
-        <GameMode onClick={handleClassicMode}>
-          <AppleIcon src={RedApple} alt="Classic Mode" />
-          <ModeName>classic</ModeName>
-        </GameMode>
-        <GameMode onClick={handleArcadeMode}>
-          <AppleIcon src={GoldenApple} alt="Arcade Mode" />
-          <ModeName>arcade</ModeName>
-        </GameMode>
-      </GameModeContainer>
-    </Container>
+    <div className="main-container">
+      <h1 className="main-title">APPLE IS BETTER</h1>
+      <div className="game-mode-container">
+        <div className="game-mode" onClick={handleClassicMode}>
+          <img className="apple-icon" src={RedApple} alt="Classic Mode" />
+          <span className="mode-name">classic</span>
+        </div>
+        <div className="game-mode" onClick={handleArcadeMode}>
+          <img className="apple-icon" src={GoldenApple} alt="Arcade Mode" />
+          <span className="mode-name">arcade</span>
+        </div>
+      </div>
+    </div>
   );
 }
 

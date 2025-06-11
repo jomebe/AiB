@@ -1,34 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-
-const GameBoard = styled.div`
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 10px;
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-`;
-
-const Apple = styled.div`
-  width: 50px;
-  height: 50px;
-  background-color: #ff5252;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  color: white;
-  cursor: pointer;
-  user-select: none;
-`;
-
-const ScoreDisplay = styled.div`
-  font-size: 24px;
-  margin-bottom: 20px;
-`;
+import '../styles/ClassicMode.css';
 
 const ClassicMode = () => {
   const [board, setBoard] = useState([]);
@@ -57,21 +28,22 @@ const ClassicMode = () => {
 
   return (
     <div>
-      <ScoreDisplay>Score: {score}</ScoreDisplay>
-      <GameBoard>
+      <div className="score-display">점수: {score}</div>
+      <div className="game-board">
         {board.map((apple, index) => (
           apple.isVisible && (
-            <Apple
+            <div
+              className="apple"
               key={index}
               onClick={() => handleAppleClick(index)}
             >
               {apple.value}
-            </Apple>
+            </div>
           )
         ))}
-      </GameBoard>
+      </div>
     </div>
   );
 };
 
-export default ClassicMode;
+export default ClassicMode; 
