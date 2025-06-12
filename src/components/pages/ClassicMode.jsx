@@ -321,19 +321,20 @@ const ClassicMode = ({ onBack }) => {
   
   return (
     <div className="classic-mode-container">
-      <h1 className="game-title">Classic Apple</h1>
-      
       <div className="game-header">
-        <div className="progress-container">
-          <div 
-            className="progress-bar" 
-            style={{ width: `${calculateTimeProgress()}%` }}
-          ></div>
-        </div>
-        
-        <div className="apple-score-container">
-          <img src={AppleSVG} alt="Apple" className="apple-icon" />
-          <span className="apple-count">{applesRemoved}</span>
+        <div className="header-content">
+          <h1 className="game-title">Classic Apple</h1>
+          <div className="progress-container">
+            <div 
+              className="progress-bar" 
+              style={{ width: `${calculateTimeProgress()}%` }}
+            ></div>
+          </div>
+          
+          <div className="apple-score-container">
+            <img src={AppleSVG} alt="Apple" className="apple-icon" />
+            <span className="apple-count">{applesRemoved}</span>
+          </div>
         </div>
       </div>
       
