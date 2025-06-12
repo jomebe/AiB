@@ -234,16 +234,20 @@ const ClassicMode = ({ onBack }) => {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
-        {gameBoard.map((row, rowIndex) => (
-          // 각 행마다 fragment로 감싸서 React key 경고 방지
-          <React.Fragment key={`row-${rowIndex}`}>
-            {row.map((cell, colIndex) => (
+        {/* 게임 보드를 행과 열로 명확하게 렌더링 */}
+        {Array.from({ length: BOARD_SIZE_Y }).map((_, rowIndex) => (
+          Array.from({ length: BOARD_SIZE_X }).map((_, colIndex) => {
+            const cell = gameBoard[rowIndex] && gameBoard[rowIndex][colIndex];
+            if (!cell) return null;
+            
+            return (
               <div 
                 key={`${rowIndex}-${colIndex}`} 
                 className={`board-cell ${cell.isVisible ? 'apple-cell' : 'empty-cell'}`}
                 data-row={rowIndex}
                 data-col={colIndex}
                 data-value={cell.value}
+                style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 1 }}
               >
                 {cell.isVisible && (
                   <img 
@@ -253,14 +257,13 @@ const ClassicMode = ({ onBack }) => {
                   />
                 )}
               </div>
-            ))}
-          </React.Fragment>
-        ))}
+            );
+          })
+        )).flat()}
       </div>
       
       <div className="game-controls">
         <button onClick={initGame}>다시 시작</button>
-        {onBack && <button onClick={onBack} className="back-button">메인으로 돌아가기</button>}
       </div>
     </div>
   );
