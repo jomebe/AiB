@@ -195,4 +195,34 @@
 
 .apple-item.faded img {
   opacity: 0.5;
+}
+
+.game-controls {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.game-controls button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #F2FDEF;
+  color: #333;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.game-controls button:hover {
+  background-color: #E0EDDF;
+}
+
+.back-button {
+  background-color: #FFE7E7 !important;
+}
+
+.back-button:hover {
+  background-color: #FFCCCC !important;
 } 

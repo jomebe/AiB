@@ -99,25 +99,33 @@
 }
 
 .game-controls {
-  display: flex;
-  gap: 10px;
   margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
 }
 
 .game-controls button {
   padding: 10px 20px;
-  background-color: #4caf50;
-  color: white;
   font-size: 16px;
-  font-weight: bold;
+  background-color: #F2FDEF;
+  color: #333;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s;
 }
 
 .game-controls button:hover {
-  background-color: #388e3c;
+  background-color: #E0EDDF;
+}
+
+.back-button {
+  background-color: #FFE7E7 !important;
+}
+
+.back-button:hover {
+  background-color: #FFCCCC !important;
 }
 
 /* 애니메이션 */

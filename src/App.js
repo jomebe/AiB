@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import RedApple from './images/apples.svg';
-import GoldenApple from './images/goldenapples.svg';
+import GoldenApple from './images/goldenapple.svg';
+import ClassicModeSelection from './components/pages/Classic.jsx';
+import ArcadeModeSelection from './components/pages/Arcade.jsx';
 
 const Container = styled.div`
   display: flex;
@@ -50,6 +52,7 @@ const AppleIcon = styled.img`
   width: 80px;
   height: 80px;
   margin-right: 24px;
+  pointer-events: none;
 `;
 
 const ModeName = styled.span`
@@ -57,24 +60,55 @@ const ModeName = styled.span`
   font-weight: 600;
   color: #000000;
   letter-spacing: -0.02em;
+  pointer-events: none;
+`;
+
+const BackButton = styled.button`
+  padding: 10px 20px;
+  background-color: #F2FDEF;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  
+  &:hover {
+    background-color: #E2EFE1;
+  }
 `;
 
 function App() {
   const [gameMode, setGameMode] = useState(null);
 
+  const renderContent = () => {
+    if (gameMode === 'classic') {
+      return <ClassicModeSelection onBack={() => setGameMode(null)} />;
+    } else if (gameMode === 'arcade') {
+      return <ArcadeModeSelection onBack={() => setGameMode(null)} />;
+    } else {
+      return (
+        <>
+          <Title>APPLE IS BETTER</Title>
+          <GameModeContainer>
+            <GameMode onClick={() => setGameMode('classic')}>
+              <AppleIcon src={RedApple} alt="Classic Mode" />
+              <ModeName>classic</ModeName>
+            </GameMode>
+            <GameMode onClick={() => setGameMode('arcade')}>
+              <AppleIcon src={GoldenApple} alt="Arcade Mode" />
+              <ModeName>arcade</ModeName>
+            </GameMode>
+          </GameModeContainer>
+        </>
+      );
+    }
+  };
+
   return (
     <Container>
-      <Title>APPLE IS BETTER</Title>
-      <GameModeContainer>
-        <GameMode onClick={() => setGameMode('classic')}>
-          <AppleIcon src={RedApple} alt="Classic Mode" />
-          <ModeName>classic</ModeName>
-        </GameMode>
-        <GameMode onClick={() => setGameMode('arcade')}>
-          <AppleIcon src={GoldenApple} alt="Arcade Mode" />
-          <ModeName>arcade</ModeName>
-        </GameMode>
-      </GameModeContainer>
+      {renderContent()}
     </Container>
   );
 }

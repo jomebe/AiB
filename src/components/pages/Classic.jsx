@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import '../styles/Classic.css';
 import ClassicMode from './ClassicMode';
 import Apple1 from '../../images/apple1.svg';
@@ -10,13 +9,8 @@ import Apple5 from '../../images/apple5.svg';
 import Apple6 from '../../images/apple6.svg';
 import Apple7 from '../../images/apple7.svg';
 
-function Classic() {
-  const navigate = useNavigate();
+function Classic({ onBack }) {
   const [selectedMode, setSelectedMode] = useState(null);
-
-  const handleBack = () => {
-    navigate('/');
-  };
 
   const handleClassicApple = () => {
     setSelectedMode('classic');
@@ -62,7 +56,7 @@ function Classic() {
   const renderGameContent = () => {
     switch(selectedMode) {
       case 'classic':
-        return <ClassicMode />;
+        return <ClassicMode onBack={() => setSelectedMode(null)} />;
       case 'timeAttack':
         return <div className="time-attack-mode">Time Attack 모드 (개발 중)</div>;
       default:
@@ -80,7 +74,7 @@ function Classic() {
           모드 선택으로 돌아가기
         </button>
       )}
-      <button className="back-button" onClick={handleBack}>메인으로 돌아가기</button>
+      <button className="back-button" onClick={onBack}>메인으로 돌아가기</button>
     </div>
   );
 }

@@ -12,7 +12,7 @@ import Apple7 from '../../images/apple7.svg';
 import Apple8 from '../../images/apple8.svg';
 import Apple9 from '../../images/apple9.svg';
 
-const ArcadeMode = ({ mode }) => {
+const ArcadeMode = ({ mode, onBack }) => {
   const [board, setBoard] = useState([]);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
@@ -165,6 +165,10 @@ const ArcadeMode = ({ mode }) => {
             </div>
           )
         ))}
+      </div>
+      <div className="game-controls">
+        <button onClick={initializeBoard}>다시 시작</button>
+        {onBack && <button onClick={onBack} className="back-button">메인으로 돌아가기</button>}
       </div>
     </div>
   );

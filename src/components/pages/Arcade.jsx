@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import '../styles/ArcadeMode.css';
 import ArcadeMode from './ArcadeMode';
 import Apple1 from '../../images/apple1.svg';
@@ -10,13 +9,8 @@ import Apple8 from '../../images/apple8.svg';
 import Apple9 from '../../images/apple9.svg';
 import GoldenApple from '../../images/goldenapple.svg';
 
-function Arcade() {
-  const navigate = useNavigate();
+function Arcade({ onBack }) {
   const [selectedMode, setSelectedMode] = useState(null);
-
-  const handleBack = () => {
-    navigate('/');
-  };
 
   const handleModeSelect = (mode) => {
     setSelectedMode(mode);
@@ -67,7 +61,7 @@ function Arcade() {
       case 'partner':
       case 'allClear':
       case 'golden':
-        return <ArcadeMode mode={selectedMode} />;
+        return <ArcadeMode mode={selectedMode} onBack={() => setSelectedMode(null)} />;
       default:
         return renderModeSelection();
     }
@@ -83,7 +77,7 @@ function Arcade() {
           모드 선택으로 돌아가기
         </button>
       )}
-      <button className="back-button" onClick={handleBack}>메인으로 돌아가기</button>
+      <button className="back-button" onClick={onBack}>메인으로 돌아가기</button>
     </div>
   );
 }

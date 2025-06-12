@@ -11,7 +11,7 @@ import Apple7 from '../../images/apple7.svg';
 import Apple8 from '../../images/apple8.svg';
 import Apple9 from '../../images/apple9.svg';
 
-const ClassicMode = () => {
+const ClassicMode = ({ onBack }) => {
   // 게임 설정
   const BOARD_SIZE_X = 15; // 가로 칸 수
   const BOARD_SIZE_Y = 10; // 세로 칸 수
@@ -260,6 +260,7 @@ const ClassicMode = () => {
       
       <div className="game-controls">
         <button onClick={initGame}>다시 시작</button>
+        {onBack && <button onClick={onBack} className="back-button">메인으로 돌아가기</button>}
       </div>
     </div>
   );
