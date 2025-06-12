@@ -15,39 +15,62 @@ function Arcade({ onBack }) {
   const handleModeSelect = (mode) => {
     setSelectedMode(mode);
   };
+  
+  // 드래그 방지 함수
+  const preventDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
 
   const renderModeSelection = () => {
     return (
       <div className="mode-selection-container">
-        <div className="mode-card" onClick={() => handleModeSelect('tetple')}>
+        <div 
+          className="mode-card" 
+          onClick={() => handleModeSelect('tetple')}
+          onDragStart={preventDrag}
+        >
           <div className="apple-grid tetple-grid">
-            <div className="apple-item"><img src={Apple3} alt="3" /></div>
-            <div className="apple-item"><img src={Apple7} alt="7" /></div>
-            <div className="apple-item"><img src={Apple8} alt="8" /></div>
+            <div className="apple-item"><img src={Apple3} alt="3" draggable="false" /></div>
+            <div className="apple-item"><img src={Apple7} alt="7" draggable="false" /></div>
+            <div className="apple-item"><img src={Apple8} alt="8" draggable="false" /></div>
           </div>
           <div className="mode-title">Tetple</div>
         </div>
 
-        <div className="mode-card" onClick={() => handleModeSelect('partner')}>
+        <div 
+          className="mode-card" 
+          onClick={() => handleModeSelect('partner')}
+          onDragStart={preventDrag}
+        >
           <div className="apple-grid partner-grid">
-            <div className="apple-item"><img src={Apple1} alt="1" /></div>
-            <div className="apple-item"><img src={Apple2} alt="2" /></div>
+            <div className="apple-item"><img src={Apple1} alt="1" draggable="false" /></div>
+            <div className="apple-item"><img src={Apple2} alt="2" draggable="false" /></div>
           </div>
           <div className="mode-title">Partner</div>
         </div>
 
-        <div className="mode-card" onClick={() => handleModeSelect('allClear')}>
+        <div 
+          className="mode-card" 
+          onClick={() => handleModeSelect('allClear')}
+          onDragStart={preventDrag}
+        >
           <div className="apple-grid all-clear-grid">
-            <div className="apple-item"><img src={Apple1} alt="1" /></div>
-            <div className="apple-item"><img src={Apple2} alt="2" /></div>
-            <div className="apple-item faded"><img src={Apple9} alt="9" /></div>
+            <div className="apple-item"><img src={Apple1} alt="1" draggable="false" /></div>
+            <div className="apple-item"><img src={Apple2} alt="2" draggable="false" /></div>
+            <div className="apple-item faded"><img src={Apple9} alt="9" draggable="false" /></div>
           </div>
           <div className="mode-title">Apple All Clear</div>
         </div>
 
-        <div className="mode-card" onClick={() => handleModeSelect('golden')}>
+        <div 
+          className="mode-card" 
+          onClick={() => handleModeSelect('golden')}
+          onDragStart={preventDrag}
+        >
           <div className="apple-grid golden-grid">
-            <div className="apple-item golden"><img src={GoldenApple} alt="Golden Apple" /></div>
+            <div className="apple-item golden"><img src={GoldenApple} alt="Golden Apple" draggable="false" /></div>
           </div>
           <div className="mode-title">Golden Apple</div>
         </div>
@@ -68,7 +91,10 @@ function Arcade({ onBack }) {
   };
 
   return (
-    <div className="arcade-container">
+    <div 
+      className="arcade-container"
+      onContextMenu={(e) => e.preventDefault()}
+    >
       <div className="game-container">
         {renderGameContent()}
       </div>

@@ -77,6 +77,13 @@
   box-sizing: border-box;
   overflow-y: auto;
   position: relative;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
 }
 
 .arcade-title {
@@ -142,6 +149,7 @@
   justify-content: center;
   flex-direction: row;
   width: 100%;
+  touch-action: none;
 }
 
 .mode-card {
@@ -157,6 +165,11 @@
   cursor: pointer;
   transition: transform 0.2s ease;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .mode-card:hover {
@@ -169,12 +182,14 @@
   margin-top: 15px;
   color: #333;
   text-align: center;
+  pointer-events: none;
 }
 
 .apple-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+  pointer-events: none;
 }
 
 .tetple-grid {
@@ -204,6 +219,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
 }
 
 .apple-item img {
@@ -212,6 +228,9 @@
   position: absolute;
   top: 0;
   left: 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .apple-item.golden img {
@@ -250,4 +269,15 @@
 
 .back-button:hover {
   background-color: #FFCCCC !important;
+} 
+
+/* 드래그 선택 방지 */
+.arcade-container *::selection {
+  background: transparent;
+  color: inherit;
+}
+
+.arcade-container *::-moz-selection {
+  background: transparent;
+  color: inherit;
 } 

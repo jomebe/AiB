@@ -10,12 +10,14 @@ import Apple6 from '../../images/apple6.svg';
 import Apple7 from '../../images/apple7.svg';
 import Apple8 from '../../images/apple8.svg';
 import Apple9 from '../../images/apple9.svg';
+import AppleSVG from '../../images/apples.svg';
 
 const ClassicMode = ({ onBack }) => {
   // 게임 설정
   const BOARD_SIZE_X = 15; // 가로 칸 수
   const BOARD_SIZE_Y = 10; // 세로 칸 수
   const TARGET_SUM = 10;
+  const GAME_TIME = 120; // 2분 (초 단위)
   
   // 게임 상태
   const [gameBoard, setGameBoard] = useState([]);
@@ -24,9 +26,13 @@ const ClassicMode = ({ onBack }) => {
   const [selectedCells, setSelectedCells] = useState([]);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [gameOver, setGameOver] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
+  const [applesRemoved, setApplesRemoved] = useState(0);
   
   const gameBoardRef = useRef(null);
   const selectionBoxRef = useRef(null);
+  const mouseIsDownRef = useRef(false); // 마우스 버튼 상태를 추적하는 ref
+  const timerRef = useRef(null);
   
   // 숫자별 사과 이미지 매핑
   const appleImages = {
@@ -42,15 +48,76 @@ const ClassicMode = ({ onBack }) => {
     default: AppleDefault
   };
   
+  // 드래그 방지 핸들러
+  const preventDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+  
+  // 컨텍스트 메뉴(우클릭 메뉴) 방지
+  const preventContextMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // 드래그 중이면 선택 상태 초기화
+    cleanupSelection();
+    return false;
+  };
+  
+  // 전역 마우스 업 이벤트 핸들러
+  const handleGlobalMouseUp = (e) => {
+    mouseIsDownRef.current = false;
+    
+    if (isSelecting) {
+      handleMouseUp(e);
+    }
+  };
+  
   // 초기화
   useEffect(() => {
     initGame();
+    
+    // 전역 이벤트 리스너 추가
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    document.addEventListener('contextmenu', preventContextMenu);
+    
+    return () => {
+      // 전역 이벤트 리스너 제거
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('contextmenu', preventContextMenu);
+      
+      // 타이머 정리
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
   }, []);
   
   const initGame = () => {
     setScore(0);
     setSelectedCells([]);
     setGameOver(false);
+    setTimeLeft(GAME_TIME);
+    setApplesRemoved(0);
+    
+    // 기존 타이머 정리
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    // 타이머 시작
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 1) {
+          clearInterval(timerRef.current);
+          setGameOver(true);
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+    
     generateBoard();
   };
   
@@ -74,7 +141,11 @@ const ClassicMode = ({ onBack }) => {
   
   // 마우스 다운 이벤트
   const handleMouseDown = (e) => {
+    // 우클릭 무시
+    if (e.button === 2) return;
+    
     if (gameOver) return;
+    mouseIsDownRef.current = true;
     
     const boardRect = gameBoardRef.current.getBoundingClientRect();
     const x = e.clientX - boardRect.left;
@@ -86,11 +157,15 @@ const ClassicMode = ({ onBack }) => {
     
     // 선택 상자 생성
     createSelectionBox(x, y);
+    
+    // 텍스트 선택 방지
+    e.preventDefault();
+    e.stopPropagation();
   };
   
   // 마우스 이동 이벤트
   const handleMouseMove = (e) => {
-    if (!isSelecting) return;
+    if (!isSelecting || !mouseIsDownRef.current) return;
     
     const boardRect = gameBoardRef.current.getBoundingClientRect();
     const x = e.clientX - boardRect.left;
@@ -98,13 +173,18 @@ const ClassicMode = ({ onBack }) => {
     
     updateSelectionBox(x, y);
     updateSelectedCells();
+    
+    // 텍스트 선택 방지
+    e.preventDefault();
+    e.stopPropagation();
   };
   
-  // 마우스 업 이벤트
-  const handleMouseUp = () => {
-    if (!isSelecting) return;
-    
-    checkSelection();
+  // 선택 상태 완전 정리
+  const cleanupSelection = () => {
+    // 모든 셀에서 선택 클래스 제거
+    document.querySelectorAll('.apple-cell').forEach(cell => {
+      cell.classList.remove('selected');
+    });
     
     // 선택 상자 제거
     if (selectionBoxRef.current) {
@@ -112,139 +192,149 @@ const ClassicMode = ({ onBack }) => {
       selectionBoxRef.current = null;
     }
     
+    mouseIsDownRef.current = false;
     setIsSelecting(false);
+    setSelectedCells([]);
+  };
+  
+  // 마우스 업 이벤트
+  const handleMouseUp = (e) => {
+    if (!isSelecting) return;
+    
+    checkSelection();
+    cleanupSelection();
+    
+    // 텍스트 선택 방지
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+  
+  // 마우스 리브 이벤트
+  const handleMouseLeave = (e) => {
+    if (isSelecting) {
+      handleMouseUp(e);
+    }
   };
   
   // 선택 상자 생성
   const createSelectionBox = (x, y) => {
     const selectionBox = document.createElement('div');
     selectionBox.className = 'selection-box';
-    
     selectionBox.style.left = `${x}px`;
     selectionBox.style.top = `${y}px`;
-    selectionBox.style.width = '0px';
-    selectionBox.style.height = '0px';
+    selectionBox.style.width = '0';
+    selectionBox.style.height = '0';
     
     gameBoardRef.current.appendChild(selectionBox);
     selectionBoxRef.current = selectionBox;
   };
   
   // 선택 상자 업데이트
-  const updateSelectionBox = (currentX, currentY) => {
+  const updateSelectionBox = (x, y) => {
     if (!selectionBoxRef.current) return;
     
-    const boxLeft = Math.min(startPos.x, currentX);
-    const boxTop = Math.min(startPos.y, currentY);
-    const boxWidth = Math.abs(currentX - startPos.x);
-    const boxHeight = Math.abs(currentY - startPos.y);
+    const { x: startX, y: startY } = startPos;
+    const width = Math.abs(x - startX);
+    const height = Math.abs(y - startY);
     
-    selectionBoxRef.current.style.left = `${boxLeft}px`;
-    selectionBoxRef.current.style.top = `${boxTop}px`;
-    selectionBoxRef.current.style.width = `${boxWidth}px`;
-    selectionBoxRef.current.style.height = `${boxHeight}px`;
+    const left = Math.min(startX, x);
+    const top = Math.min(startY, y);
+    
+    selectionBoxRef.current.style.left = `${left}px`;
+    selectionBoxRef.current.style.top = `${top}px`;
+    selectionBoxRef.current.style.width = `${width}px`;
+    selectionBoxRef.current.style.height = `${height}px`;
   };
   
   // 선택된 셀 업데이트
   const updateSelectedCells = () => {
-    if (!selectionBoxRef.current || !gameBoardRef.current) return;
+    if (!selectionBoxRef.current) return;
     
     const selectionRect = selectionBoxRef.current.getBoundingClientRect();
     const cells = document.querySelectorAll('.apple-cell');
-    const selected = [];
+    const selectedCellsData = [];
     
     cells.forEach(cell => {
+      cell.classList.remove('selected');
+      
+      if (!cell.dataset.value) return;
+      
       const cellRect = cell.getBoundingClientRect();
       
-      // 셀이 선택 상자와 겹치는지 확인하고 visible한 셀만 선택
+      // 셀의 중심점
+      const cellCenterX = cellRect.left + cellRect.width / 2;
+      const cellCenterY = cellRect.top + cellRect.height / 2;
+      
+      // 중심점이 선택 상자 내에 있는지 확인
       if (
-        cellRect.right > selectionRect.left &&
-        cellRect.left < selectionRect.right &&
-        cellRect.bottom > selectionRect.top &&
-        cellRect.top < selectionRect.bottom
+        cellCenterX >= selectionRect.left &&
+        cellCenterX <= selectionRect.right &&
+        cellCenterY >= selectionRect.top &&
+        cellCenterY <= selectionRect.bottom
       ) {
-        const row = parseInt(cell.dataset.row);
-        const col = parseInt(cell.dataset.col);
+        cell.classList.add('selected');
         
-        if (gameBoard[row] && gameBoard[row][col] && gameBoard[row][col].isVisible) {
-          cell.classList.add('selected');
-          selected.push({
-            row: row,
-            col: col,
-            value: gameBoard[row][col].value
-          });
-        }
-      } else {
-        cell.classList.remove('selected');
+        selectedCellsData.push({
+          row: parseInt(cell.dataset.row),
+          col: parseInt(cell.dataset.col),
+          value: parseInt(cell.dataset.value)
+        });
       }
     });
     
-    setSelectedCells(selected);
+    setSelectedCells(selectedCellsData);
   };
   
-  // 선택 확인
+  // 선택 검사
   const checkSelection = () => {
-    if (selectedCells.length < 2) {
-      return; // 최소 2개 이상의 셀이 선택되어야 함
-    }
+    if (selectedCells.length < 2) return;
     
+    // 선택된 셀의 값 합계 계산
     const sum = selectedCells.reduce((total, cell) => total + cell.value, 0);
     
-    // 합이 목표값과 일치하면 점수 획득
+    // 합계가 목표값과 일치하는지 확인
     if (sum === TARGET_SUM) {
-      // 점수 계산: 선택한 셀의 수
-      const gainedScore = selectedCells.length;
-      setScore(prev => prev + gainedScore);
+      // 점수 추가
+      setScore(prevScore => prevScore + sum * selectedCells.length);
       
-      // 선택된 셀 제거
-      removeSelectedCells();
+      // 사과 제거
+      const newBoard = [...gameBoard];
+      selectedCells.forEach(cell => {
+        newBoard[cell.row][cell.col].isVisible = false;
+      });
+      
+      // 제거된 사과 개수 업데이트
+      setApplesRemoved(prev => prev + selectedCells.length);
+      
+      setGameBoard(newBoard);
     }
     
-    // 모든 셀에서 선택 클래스 제거
-    document.querySelectorAll('.apple-cell').forEach(cell => {
-      cell.classList.remove('selected');
-    });
-  };
-  
-  // 선택된 셀 제거
-  const removeSelectedCells = () => {
-    const newBoard = [...gameBoard.map(row => [...row])];
-    
-    selectedCells.forEach(cell => {
-      if (newBoard[cell.row] && newBoard[cell.row][cell.col]) {
-        newBoard[cell.row][cell.col].isVisible = false;
-      }
-    });
-    
-    setGameBoard(newBoard);
     setSelectedCells([]);
   };
   
-  // 드래그 방지 핸들러
-  const preventDrag = (e) => {
-    e.preventDefault();
-    return false;
+  // 타이머 진행률 계산 (0~100)
+  const calculateTimeProgress = () => {
+    return (timeLeft / GAME_TIME) * 100;
   };
   
-  useEffect(() => {
-    // 모든 이미지에 드래그 방지 적용
-    const images = document.querySelectorAll('.apple-image');
-    images.forEach(img => {
-      img.addEventListener('dragstart', preventDrag);
-    });
-    
-    return () => {
-      // 컴포넌트 언마운트시 이벤트 리스너 제거
-      images.forEach(img => {
-        img.removeEventListener('dragstart', preventDrag);
-      });
-    };
-  }, [gameBoard]);
-
   return (
     <div className="classic-mode-container">
+      <h1 className="game-title">Classic Apple</h1>
+      
       <div className="game-header">
-        <h1>클래식 애플</h1>
-        <div className="score-display">점수: {score}</div>
+        <div className="progress-container">
+          <div 
+            className="progress-bar" 
+            style={{ width: `${calculateTimeProgress()}%` }}
+          ></div>
+        </div>
+        
+        <div className="apple-score-container">
+          <img src={AppleSVG} alt="Apple" className="apple-icon" />
+          <span className="apple-count">{applesRemoved}</span>
+        </div>
       </div>
       
       <div 
@@ -253,8 +343,10 @@ const ClassicMode = ({ onBack }) => {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         onDragStart={preventDrag}
+        onContextMenu={preventContextMenu}
+        onSelectStart={preventDrag}
       >
         {/* 게임 보드를 행과 열로 명확하게 렌더링 */}
         {Array.from({ length: BOARD_SIZE_Y }).map((_, rowIndex) => (
@@ -271,6 +363,9 @@ const ClassicMode = ({ onBack }) => {
                 data-value={cell.value}
                 style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 1 }}
                 draggable="false"
+                onContextMenu={preventContextMenu}
+                onDragStart={preventDrag}
+                onSelectStart={preventDrag}
               >
                 {cell.isVisible && (
                   <img 
@@ -279,6 +374,7 @@ const ClassicMode = ({ onBack }) => {
                     className="apple-image" 
                     draggable="false"
                     onDragStart={preventDrag}
+                    onContextMenu={preventContextMenu}
                   />
                 )}
               </div>
@@ -287,9 +383,17 @@ const ClassicMode = ({ onBack }) => {
         )).flat()}
       </div>
       
-      <div className="game-controls">
-        <button onClick={initGame}>다시 시작</button>
-      </div>
+      {gameOver && (
+        <div className="game-over-overlay">
+          <div className="game-over-message">
+            <h2>게임 종료!</h2>
+            <p>최종 점수: {score}</p>
+            <p>제거한 사과: {applesRemoved}개</p>
+            <button onClick={initGame}>다시 시작</button>
+            <button onClick={onBack} className="back-button">메인으로 돌아가기</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

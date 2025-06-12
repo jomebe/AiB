@@ -5,6 +5,13 @@ html, body {
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  /* 선택 방지 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 body {
@@ -34,4 +41,17 @@ img {
   -o-user-drag: none;
   user-drag: none;
   pointer-events: none;
+}
+
+/* 드래그 자국 방지 스타일 */
+::selection {
+  background: transparent;
+}
+
+::-moz-selection {
+  background: transparent;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
 }
