@@ -168,7 +168,6 @@ const ArcadeMode = ({ mode, onBack }) => {
       </div>
       <div className="game-controls">
         <button onClick={initializeBoard}>다시 시작</button>
-        {onBack && <button onClick={onBack} className="back-button">메인으로 돌아가기</button>}
       </div>
     </div>
   );

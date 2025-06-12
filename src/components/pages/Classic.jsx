@@ -69,12 +69,14 @@ function Classic({ onBack }) {
       <div className="game-container">
         {renderGameContent()}
       </div>
-      {selectedMode && (
-        <button className="back-button" onClick={() => setSelectedMode(null)}>
-          모드 선택으로 돌아가기
-        </button>
-      )}
-      <button className="back-button" onClick={onBack}>메인으로 돌아가기</button>
+      <div className="button-container">
+        {selectedMode && (
+          <button className="back-button" onClick={() => setSelectedMode(null)}>
+            모드 선택으로 돌아가기
+          </button>
+        )}
+        <button className="back-button" onClick={onBack}>메인으로 돌아가기</button>
+      </div>
     </div>
   );
 }

@@ -1,10 +1,19 @@
+html, body {
+  overflow-y: auto;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 .classic-mode-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  max-width: 1400px; /* 더 넓은 컨테이너 */
+  padding: 60px 20px 20px 20px; /* 상단 패딩 증가 */
+  max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+  margin-bottom: 80px; /* 버튼이 보이도록 하단 여백 추가 */
 }
 
 .game-header {
@@ -12,64 +21,63 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px; /* 여백 증가 */
+  padding: 0 20px; /* 좌우 패딩 추가 */
 }
 
 .game-header h1 {
   color: #333;
   margin: 0;
+  font-size: 32px; /* 글씨 크기 증가 */
 }
 
 .game-board {
   display: grid;
-  grid-template-columns: repeat(15, 1fr);
-  grid-template-rows: repeat(10, 1fr);
-  grid-auto-flow: row;
-  gap: 8px; /* 간격 늘림 */
-  padding: 20px;
+  grid-template-columns: repeat(15, 40px);
+  grid-template-rows: repeat(10, 40px);
+  gap: 5px;
+  padding: 15px;
   background: #e8f5e9;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  margin-bottom: 30px; /* 하단 여백 증가 */
   position: relative;
   overflow: visible;
-  width: 100%;
-  max-width: 1200px; /* 더 넓게 */
-  min-height: 580px; /* 최소 높이 지정 */
+  width: fit-content;
+  height: fit-content;
+  margin: 0 auto 30px auto; /* 상하좌우 마진 설정 */
+  justify-content: center;
 }
 
 .board-cell {
-  width: 100%;
-  height: 100%;
-  min-width: 45px; /* 최소 너비 지정 */
-  min-height: 45px; /* 최소 높이 지정 */
+  width: 40px;
+  height: 40px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.1s ease;
-  aspect-ratio: 1 / 1; /* 정사각형 셀 */
+  border-radius: 5px;
+  box-sizing: border-box;
 }
 
 .apple-cell {
   cursor: pointer;
   user-select: none;
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 .empty-cell {
   background-color: rgba(200, 200, 200, 0.1);
   border: 1px dashed #ccc;
-  border-radius: 5px;
 }
 
 .apple-image {
-  width: 100%;
-  height: 100%;
-  max-width: 45px; /* 최대 너비 */
-  max-height: 45px; /* 최대 높이 */
+  width: 80%;
+  height: 80%;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 10%;
+  left: 10%;
   pointer-events: none; /* 이미지는 드래그 안됨 */
   object-fit: contain; /* 이미지가 잘리지 않게 */
 }
@@ -96,6 +104,7 @@
   padding: 10px 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-right: 10px; /* 우측 여백 추가 */
 }
 
 .game-controls {
@@ -138,13 +147,14 @@
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .game-board {
-    grid-template-columns: repeat(15, 1fr);
-    gap: 4px;
+    grid-template-columns: repeat(15, 30px);
+    grid-template-rows: repeat(10, 30px);
+    gap: 3px;
     padding: 10px;
   }
   
   .board-cell {
-    min-width: 35px;
-    min-height: 35px;
+    width: 30px;
+    height: 30px;
   }
 } 
