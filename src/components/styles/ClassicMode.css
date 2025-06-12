@@ -59,12 +59,19 @@ html, body {
   transition: transform 0.1s ease;
   border-radius: 5px;
   box-sizing: border-box;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 .apple-cell {
   cursor: pointer;
   user-select: none;
   background-color: rgba(255, 255, 255, 0.4);
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .empty-cell {
@@ -80,6 +87,12 @@ html, body {
   left: 10%;
   pointer-events: none; /* 이미지는 드래그 안됨 */
   object-fit: contain; /* 이미지가 잘리지 않게 */
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
 }
 
 .apple-cell.selected {

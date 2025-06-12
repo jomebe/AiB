@@ -30,6 +30,12 @@ const ArcadeMode = ({ mode, onBack }) => {
     9: Apple9,
     default: AppleDefault
   };
+  
+  // 드래그 방지 핸들러
+  const preventDrag = (e) => {
+    e.preventDefault();
+    return false;
+  };
 
   useEffect(() => {
     initializeBoard();
@@ -47,8 +53,20 @@ const ArcadeMode = ({ mode, onBack }) => {
         return prevTime - 1;
       });
     }, 1000);
-
-    return () => clearInterval(timer);
+    
+    // 모든 이미지에 드래그 방지 적용
+    const images = document.querySelectorAll('.apple-image');
+    images.forEach(img => {
+      img.addEventListener('dragstart', preventDrag);
+    });
+    
+    return () => {
+      clearInterval(timer);
+      // 컴포넌트 언마운트시 이벤트 리스너 제거
+      images.forEach(img => {
+        img.removeEventListener('dragstart', preventDrag);
+      });
+    };
   }, [mode]);
 
   const initializeBoard = () => {
@@ -149,18 +167,21 @@ const ArcadeMode = ({ mode, onBack }) => {
         <div className="time-display">시간: {timeLeft}초</div>
         <div className="mode-display">{getModeTitle(mode)}</div>
       </div>
-      <div className="game-board">
+      <div className="game-board" onDragStart={preventDrag}>
         {board.map((apple, index) => (
           apple.isVisible && (
             <div
               className={`apple-container ${apple.isGolden ? 'golden' : ''}`}
               key={index}
               onClick={() => handleAppleClick(index)}
+              draggable="false"
             >
               <img 
                 src={apple.isGolden ? GoldenApple : appleImages[apple.value] || appleImages.default}
                 alt={`Apple ${apple.value}`} 
                 className="apple-image"
+                draggable="false"
+                onDragStart={preventDrag}
               />
             </div>
           )
