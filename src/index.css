@@ -25,3 +25,13 @@ code {
   display: flex;
   flex-direction: column;
 }
+
+/* 전역 이미지 드래그 방지 */
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}

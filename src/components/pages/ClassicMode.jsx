@@ -218,6 +218,27 @@ const ClassicMode = ({ onBack }) => {
     setGameBoard(newBoard);
     setSelectedCells([]);
   };
+  
+  // 드래그 방지 핸들러
+  const preventDrag = (e) => {
+    e.preventDefault();
+    return false;
+  };
+  
+  useEffect(() => {
+    // 모든 이미지에 드래그 방지 적용
+    const images = document.querySelectorAll('.apple-image');
+    images.forEach(img => {
+      img.addEventListener('dragstart', preventDrag);
+    });
+    
+    return () => {
+      // 컴포넌트 언마운트시 이벤트 리스너 제거
+      images.forEach(img => {
+        img.removeEventListener('dragstart', preventDrag);
+      });
+    };
+  }, [gameBoard]);
 
   return (
     <div className="classic-mode-container">
@@ -233,6 +254,7 @@ const ClassicMode = ({ onBack }) => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onDragStart={preventDrag}
       >
         {/* 게임 보드를 행과 열로 명확하게 렌더링 */}
         {Array.from({ length: BOARD_SIZE_Y }).map((_, rowIndex) => (
@@ -248,12 +270,15 @@ const ClassicMode = ({ onBack }) => {
                 data-col={colIndex}
                 data-value={cell.value}
                 style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 1 }}
+                draggable="false"
               >
                 {cell.isVisible && (
                   <img 
                     src={appleImages[cell.value] || appleImages.default} 
                     alt={`Apple ${cell.value}`} 
                     className="apple-image" 
+                    draggable="false"
+                    onDragStart={preventDrag}
                   />
                 )}
               </div>
