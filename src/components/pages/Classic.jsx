@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/Classic.css';
 import ClassicMode from './ClassicMode';
+import TimeAttackMode from './TimeAttackMode';
 import Apple1 from '../../images/apple1.svg';
 import Apple2 from '../../images/apple2.svg';
 import Apple3 from '../../images/apple3.svg';
@@ -19,6 +20,15 @@ function Classic({ onBack }) {
   const handleTimeAttack = () => {
     setSelectedMode('timeAttack');
   };
+
+  // 선택된 모드에 따라 컴포넌트 렌더링
+  if (selectedMode === 'classic') {
+    return <ClassicMode onBack={() => setSelectedMode(null)} />;
+  }
+  
+  if (selectedMode === 'timeAttack') {
+    return <TimeAttackMode onBack={() => setSelectedMode(null)} />;
+  }
 
   const renderModeSelection = () => {
     return (
@@ -58,7 +68,7 @@ function Classic({ onBack }) {
       case 'classic':
         return <ClassicMode onBack={() => setSelectedMode(null)} />;
       case 'timeAttack':
-        return <div className="time-attack-mode">Time Attack 모드 (개발 중)</div>;
+        return <TimeAttackMode onBack={() => setSelectedMode(null)} />;
       default:
         return renderModeSelection();
     }
@@ -81,4 +91,4 @@ function Classic({ onBack }) {
   );
 }
 
-export default Classic; 
+export default Classic;

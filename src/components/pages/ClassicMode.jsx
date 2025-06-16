@@ -299,16 +299,24 @@ const ClassicMode = ({ onBack }) => {
       // 점수 추가
       setScore(prevScore => prevScore + sum * selectedCells.length);
       
-      // 사과 제거
-      const newBoard = [...gameBoard];
+      // 애니메이션 효과를 위해 선택된 셀에 클래스 추가
       selectedCells.forEach(cell => {
-        newBoard[cell.row][cell.col].isVisible = false;
+        const cellElement = document.querySelector(`.board-cell[data-row="${cell.row}"][data-col="${cell.col}"] .apple-image`);
+        if (cellElement) {
+          // 펑 터지는 애니메이션 적용
+          cellElement.classList.add('apple-explode');
+          
+          // 애니메이션이 끝나면 사과 제거
+          setTimeout(() => {
+            const newBoard = [...gameBoard];
+            newBoard[cell.row][cell.col].isVisible = false;
+            setGameBoard(newBoard);
+          }, 250); // 애니메이션 시간과 맞춤 (0.25초)
+        }
       });
       
       // 제거된 사과 개수 업데이트
       setApplesRemoved(prev => prev + selectedCells.length);
-      
-      setGameBoard(newBoard);
     }
     
     setSelectedCells([]);
