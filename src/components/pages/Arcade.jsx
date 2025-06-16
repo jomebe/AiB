@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import '../styles/ArcadeMode.css';
 import ArcadeMode from './ArcadeMode';
+import GoldenAppleMode from './GoldenAppleMode';
 import Apple1 from '../../images/apple1.svg';
 import Apple2 from '../../images/apple2.svg';
 import Apple3 from '../../images/apple3.svg';
+import Apple5 from '../../images/apple5.svg';
 import Apple7 from '../../images/apple7.svg';
 import Apple8 from '../../images/apple8.svg';
 import Apple9 from '../../images/apple9.svg';
@@ -25,16 +27,16 @@ function Arcade({ onBack }) {
 
   const renderModeSelection = () => {
     return (
-      <div className="mode-selection-container">
-        <div 
+      <div className="mode-selection-container">        <div 
           className="mode-card" 
           onClick={() => handleModeSelect('tetple')}
           onDragStart={preventDrag}
         >
           <div className="apple-grid tetple-grid">
+            <div className="apple-item"><img src={Apple2} alt="2" draggable="false" /></div>
+            <div className="apple-item"><img src={Apple2} alt="2" draggable="false" /></div>
+            <div className="apple-item"><img src={Apple5} alt="5" draggable="false" /></div>
             <div className="apple-item"><img src={Apple3} alt="3" draggable="false" /></div>
-            <div className="apple-item"><img src={Apple7} alt="7" draggable="false" /></div>
-            <div className="apple-item"><img src={Apple8} alt="8" draggable="false" /></div>
           </div>
           <div className="mode-title">Tetple</div>
         </div>
@@ -77,13 +79,13 @@ function Arcade({ onBack }) {
       </div>
     );
   };
-
   const renderGameContent = () => {
     switch(selectedMode) {
+      case 'golden':
+        return <GoldenAppleMode onBack={() => setSelectedMode(null)} />;
       case 'tetple':
       case 'partner':
       case 'allClear':
-      case 'golden':
         return <ArcadeMode mode={selectedMode} onBack={() => setSelectedMode(null)} />;
       default:
         return renderModeSelection();

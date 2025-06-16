@@ -83,36 +83,44 @@ html, body {
 }
 
 .game-board {
-  display: grid;
-  grid-template-columns: repeat(15, 50px);
-  grid-template-rows: repeat(10, 50px);
-  gap: 5px;
+  position: relative;
+  width: 900px;
+  height: 600px;
   background-color: #f2fdef;
   border-radius: 12px;
-  padding: 10px;
+  padding: 80px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  position: relative;
   touch-action: none;
+  margin: 0 auto;
 }
 
 .board-cell {
-  width: 50px;
-  height: 50px;
+  position: absolute;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
   background-color: transparent;
-  position: relative;
 }
 
 .apple-cell {
   cursor: pointer;
 }
 
-.apple-cell.selected {
+.board-cell.selected {
   background-color: rgba(102, 190, 110, 0.3);
+  border: 2px solid #66BE6E;
   border-radius: 8px;
+}
+
+.selection-box {
+  position: absolute;
+  border: 2px dashed #66BE6E;
+  background-color: rgba(102, 190, 110, 0.2);
+  pointer-events: none;
+  z-index: 10;
 }
 
 .empty-cell {
@@ -120,163 +128,33 @@ html, body {
 }
 
 .apple-image {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
+  transition: transform 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   pointer-events: none;
-  user-drag: none;
-  -webkit-user-drag: none;
 }
 
-.selection-box {
-  position: absolute;
-  border: 2px dashed #2196F3;
-  background-color: rgba(33, 150, 243, 0.2);
-  pointer-events: none;
-  z-index: 10;
+.apple-image.apple-explode {
+  animation: appleExplode 0.5s ease-out forwards;
 }
 
-.game-controls {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-}
-
-.game-controls button {
-  padding: 15px 30px;
-  font-size: 16px;
-  background-color: #fff;
-  color: #333;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.game-controls button:hover {
-  background-color: #f5f5f5;
-}
-
-.back-button {
-  background-color: #e0f0e3 !important;
-  color: #000000 !important;
-}
-
-.back-button:hover {
-  background-color: #c0e0c3 !important;
-}
-
-.game-over-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.game-over-message {
-  background-color: #f2fdef;
-  padding: 30px 50px;
-  border-radius: 16px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.game-over-message h2 {
-  font-size: 32px;
-  margin-bottom: 20px;
-  color: #000000;
-}
-
-.game-over-message p {
-  font-size: 20px;
-  margin-bottom: 10px;
-  color: #000000;
-}
-
-.game-over-message button {
-  padding: 10px 20px;
-  margin: 10px;
-  background-color: #66BE6E;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.game-over-message button:hover {
-  background-color: #55ad5d;
-}
-
-.game-board *::selection {
-  background: transparent;
-}
-
-.game-board *::-moz-selection {
-  background: transparent;
-  color: inherit;
-}
-
-@media (max-width: 768px) {
-  .game-board {
-    grid-template-columns: repeat(15, 30px);
-    grid-template-rows: repeat(10, 30px);
-    gap: 3px;
-    padding: 10px;
+@keyframes appleExplode {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
   }
-  
-  .board-cell {
-    width: 30px;
-    height: 30px;
+  50% {
+    transform: scale(1.3) rotate(180deg);
+    opacity: 0.7;
   }
-  
-  .apple-image {
-    width: 25px;
-    height: 25px;
+  100% {
+    transform: scale(0) rotate(360deg);
+    opacity: 0;
   }
-}
-
-/* Time Attack 모드 스타일 */
-.time-attack-board {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-  gap: 10px;
-  width: 400px;
-  height: 400px;
-  margin: 20px auto;
-  padding: 20px;
-  background: #F2FDEF;
-  border-radius: 16px;
-  position: relative;
-}
-
-.time-attack-board .apple-cell {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
-  cursor: pointer;
-  transition: transform 0.1s ease;
-}
-
-.time-attack-board .apple-cell:hover {
-  transform: scale(1.05);
-}
-
-.time-attack-board .apple-cell.selected {
-  transform: scale(1.05);
 }
 
 @keyframes apple-falling {
@@ -349,4 +227,125 @@ html, body {
 .apple-collected {
   opacity: 0;
   transition: opacity 0.3s ease-out;
+}
+
+@media (max-width: 768px) {
+  .game-board {
+    grid-template-columns: repeat(15, 30px);
+    grid-template-rows: repeat(10, 30px);
+    gap: 3px;
+    padding: 30px;
+  }
+  
+  .board-cell {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .apple-image {
+    width: 25px;
+    height: 25px;
+  }
+}
+
+/* Time Attack 모드 스타일 */
+.time-attack-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 10px;
+  width: 520px;
+  height: 520px;
+  margin: 20px auto;
+  padding: 80px 60px 80px 100px;
+  background: #F2FDEF;
+  border-radius: 16px;
+  position: relative;
+  place-content: center;
+  place-items: center;
+}
+
+.time-attack-board .apple-cell {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.time-attack-board .apple-cell:hover {
+  transform: scale(1.05);
+}
+
+.time-attack-board .apple-cell.selected {
+  transform: scale(1.05);
+}
+
+.game-over-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #f2fdef;
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  min-width: 300px;
+}
+
+.modal-content h2 {
+  font-size: 28px;
+  color: #000000;
+  margin-bottom: 20px;
+}
+
+.modal-content p {
+  font-size: 16px;
+  color: #333;
+  margin: 10px 0;
+}
+
+.restart-button, .back-to-menu-button {
+  font-size: 16px;
+  padding: 12px 24px;
+  margin: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.restart-button {
+  background-color: #66BE6E;
+  color: white;
+}
+
+.restart-button:hover {
+  background-color: #55a05d;
+}
+
+.back-to-menu-button {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.back-to-menu-button:hover {
+  background-color: #d0d0d0;
 }

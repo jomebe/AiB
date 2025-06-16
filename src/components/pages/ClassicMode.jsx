@@ -355,7 +355,6 @@ const ClassicMode = ({ onBack }) => {
         onMouseLeave={handleMouseLeave}
         onDragStart={preventDrag}
         onContextMenu={preventContextMenu}
-        onSelectStart={preventDrag}
       >
         {/* 게임 보드를 행과 열로 명확하게 렌더링 */}
         {Array.from({ length: BOARD_SIZE_Y }).map((_, rowIndex) => (
@@ -370,11 +369,13 @@ const ClassicMode = ({ onBack }) => {
                 data-row={rowIndex}
                 data-col={colIndex}
                 data-value={cell.value}
-                style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 1 }}
+                style={{ 
+                  left: `${83 + colIndex * 49}px`, 
+                  top: `${55 + rowIndex * 49}px` 
+                }}
                 draggable="false"
                 onContextMenu={preventContextMenu}
                 onDragStart={preventDrag}
-                onSelectStart={preventDrag}
               >
                 {cell.isVisible && (
                   <img 

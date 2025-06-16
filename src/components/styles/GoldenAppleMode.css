@@ -1,0 +1,252 @@
+/* Golden Apple Mode Styles */
+.golden-apple-mode-container {
+  min-height: 100vh;
+  background: #E8F5E8;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.golden-apple-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: #E8F5E8;
+  position: relative;
+  z-index: 2;
+}
+
+.golden-apple-title {
+  font-family: 'Arial', sans-serif;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #8B4513;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.golden-apple-progress-container {
+  flex: 1;
+  max-width: 400px;
+  margin: 0 30px;
+  background: #90EE90;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.golden-apple-progress-bar {
+  height: 100%;
+  background: #32CD32;
+  transition: width 0.3s ease;
+  border-radius: 10px;
+}
+
+.golden-apple-score-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.golden-apple-score-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.golden-apple-score-text {
+  font-family: 'Arial', sans-serif;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #8B4513;
+}
+
+.golden-apple-board-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.golden-apple-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(17, 1fr);
+  gap: 2px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  backdrop-filter: blur(5px);
+}
+
+.golden-apple-cell {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.golden-apple-cell:hover {
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+.golden-apple-cell.selected {
+  background: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+  border: 2px solid #ffd700;
+}
+
+.golden-apple-image {
+  width: 44px;
+  height: 44px;
+  transition: all 0.3s ease;
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.golden-apple-image.apple-explode {
+  animation: goldenAppleExplode 0.5s ease-out forwards;
+}
+
+@keyframes goldenAppleExplode {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3) rotate(180deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.golden-apple-selection-box {
+  position: absolute;
+  border: 2px dashed #32CD32;
+  background: rgba(50, 205, 50, 0.2);
+  pointer-events: none;
+  z-index: 5;
+  border-radius: 4px;
+}
+
+.golden-apple-game-over-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.golden-apple-modal-content {
+  background: #E8F5E8;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 3px solid #32CD32;
+  min-width: 400px;
+}
+
+.golden-apple-modal-content h2 {
+  font-family: 'Arial', sans-serif;
+  font-size: 2.5rem;
+  color: #8B4513;
+  margin-bottom: 20px;
+}
+
+.golden-apple-modal-content p {
+  font-family: 'Arial', sans-serif;
+  font-size: 1.2rem;
+  color: #654321;
+  margin: 10px 0;
+  font-weight: bold;
+}
+
+.golden-apple-restart-button, .golden-apple-back-button {
+  font-family: 'Arial', sans-serif;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 12px 25px;
+  margin: 10px;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.golden-apple-restart-button {
+  background: #32CD32;
+  color: white;
+}
+
+.golden-apple-restart-button:hover {
+  background: #228B22;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.golden-apple-back-button {
+  background: #FF6B6B;
+  color: white;
+}
+
+.golden-apple-back-button:hover {
+  background: #DC3545;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.golden-apple-info-panel {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid #32CD32;
+  font-family: 'Arial', sans-serif;
+  font-size: 0.9rem;
+  color: #333;
+  max-width: 250px;
+  z-index: 10;
+}
+
+.golden-apple-info-panel h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+  color: #8B4513;
+  font-weight: bold;
+}
+
+.golden-apple-info-panel ul {
+  margin: 0;
+  padding-left: 15px;
+}
+
+.golden-apple-info-panel li {
+  margin: 5px 0;
+  line-height: 1.3;
+}
