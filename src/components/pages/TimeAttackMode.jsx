@@ -80,7 +80,7 @@ const TimeAttackMode = ({ onBack }) => {  // 게임 설정
         selected: false
       };
       
-      // 애니메이션 클래스 제거
+      // 애니메이션 클래스 제
       const cellElement = document.querySelector(`[data-cell-id="${cell.id}"] .apple-image`);
       if (cellElement) {
         cellElement.classList.remove('apple-explode');
