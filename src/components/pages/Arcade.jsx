@@ -24,10 +24,10 @@ function Arcade({ onBack }) {
     e.stopPropagation();
     return false;
   };
-
   const renderModeSelection = () => {
     return (
-      <div className="mode-selection-container">        <div 
+      <div className="mode-selection-container">
+        <div 
           className="mode-card" 
           onClick={() => handleModeSelect('tetple')}
           onDragStart={preventDrag}
@@ -39,9 +39,7 @@ function Arcade({ onBack }) {
             <div className="apple-item"><img src={Apple3} alt="3" draggable="false" /></div>
           </div>
           <div className="mode-title">Tetple</div>
-        </div>
-
-        <div 
+        </div>        <div 
           className="mode-card" 
           onClick={() => handleModeSelect('partner')}
           onDragStart={preventDrag}
@@ -49,19 +47,18 @@ function Arcade({ onBack }) {
           <div className="apple-grid partner-grid">
             <div className="apple-item"><img src={Apple1} alt="1" draggable="false" /></div>
             <div className="apple-item"><img src={Apple2} alt="2" draggable="false" /></div>
+            <div className="apple-item"><img src={Apple7} alt="7" draggable="false" /></div>
           </div>
           <div className="mode-title">Partner</div>
-        </div>
-
-        <div 
+        </div>        <div 
           className="mode-card" 
           onClick={() => handleModeSelect('allClear')}
           onDragStart={preventDrag}
         >
           <div className="apple-grid all-clear-grid">
+            <div className="apple-item"><img src={Apple8} alt="8" draggable="false" /></div>
             <div className="apple-item"><img src={Apple1} alt="1" draggable="false" /></div>
-            <div className="apple-item"><img src={Apple2} alt="2" draggable="false" /></div>
-            <div className="apple-item faded"><img src={Apple9} alt="9" draggable="false" /></div>
+            <div className="apple-item"><img src={Apple1} alt="1" draggable="false" /></div>
           </div>
           <div className="mode-title">Apple All Clear</div>
         </div>

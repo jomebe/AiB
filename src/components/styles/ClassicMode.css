@@ -298,54 +298,98 @@ html, body {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content {
-  background: #f2fdef;
-  border-radius: 16px;
-  padding: 40px;
+  background: linear-gradient(135deg, #f2fdef 0%, #e8f5e8 100%);
+  border-radius: 20px;
+  padding: 50px 40px;
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  min-width: 300px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  min-width: 350px;
+  max-width: 500px;
+  border: 2px solid #66BE6E;
+  transform: scale(0.8);
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+@keyframes scaleIn {
+  to {
+    transform: scale(1);
+  }
 }
 
 .modal-content h2 {
-  font-size: 28px;
-  color: #000000;
+  font-size: 32px;
+  color: #2d5016;
   margin-bottom: 20px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .modal-content p {
-  font-size: 16px;
-  color: #333;
-  margin: 10px 0;
+  font-size: 18px;
+  color: #4a4a4a;
+  margin: 15px 0;
+  font-weight: 500;
 }
 
 .restart-button, .back-to-menu-button {
   font-size: 16px;
-  padding: 12px 24px;
-  margin: 10px;
+  padding: 15px 30px;
+  margin: 15px 10px;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: bold;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
 .restart-button {
-  background-color: #66BE6E;
+  background: linear-gradient(45deg, #66BE6E, #4CAF50);
   color: white;
+  border: 2px solid transparent;
 }
 
 .restart-button:hover {
-  background-color: #55a05d;
+  background: linear-gradient(45deg, #4CAF50, #45a049);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.restart-button:active {
+  transform: translateY(0);
 }
 
 .back-to-menu-button {
-  background-color: #e0e0e0;
+  background: linear-gradient(45deg, #f5f5f5, #e0e0e0);
   color: #333;
+  border: 2px solid #d0d0d0;
 }
 
 .back-to-menu-button:hover {
-  background-color: #d0d0d0;
+  background: linear-gradient(45deg, #e0e0e0, #d0d0d0);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-color: #bbb;
+}
+
+.back-to-menu-button:active {
+  transform: translateY(0);
 }

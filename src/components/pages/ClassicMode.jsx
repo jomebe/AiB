@@ -76,6 +76,8 @@ const ClassicMode = ({ onBack }) => {
   
   // 초기화
   useEffect(() => {
+    // 게임 보드 먼저 생성
+    generateBoard();
     initGame();
     
     // 전역 이벤트 리스너 추가
@@ -118,6 +120,7 @@ const ClassicMode = ({ onBack }) => {
       });
     }, 1000);
     
+    // 게임 보드 새로 생성
     generateBoard();
   };
   
