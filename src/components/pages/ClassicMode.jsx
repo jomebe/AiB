@@ -76,8 +76,6 @@ const ClassicMode = ({ onBack }) => {
   
   // 초기화
   useEffect(() => {
-    // 게임 보드 먼저 생성
-    generateBoard();
     initGame();
     
     // 전역 이벤트 리스너 추가
@@ -120,7 +118,6 @@ const ClassicMode = ({ onBack }) => {
       });
     }, 1000);
     
-    // 게임 보드 새로 생성
     generateBoard();
   };
   
@@ -358,6 +355,7 @@ const ClassicMode = ({ onBack }) => {
         onMouseLeave={handleMouseLeave}
         onDragStart={preventDrag}
         onContextMenu={preventContextMenu}
+        onSelectStart={preventDrag}
       >
         {/* 게임 보드를 행과 열로 명확하게 렌더링 */}
         {Array.from({ length: BOARD_SIZE_Y }).map((_, rowIndex) => (
@@ -372,13 +370,11 @@ const ClassicMode = ({ onBack }) => {
                 data-row={rowIndex}
                 data-col={colIndex}
                 data-value={cell.value}
-                style={{ 
-                  left: `${83 + colIndex * 49}px`, 
-                  top: `${55 + rowIndex * 49}px` 
-                }}
+                style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 1 }}
                 draggable="false"
                 onContextMenu={preventContextMenu}
                 onDragStart={preventDrag}
+                onSelectStart={preventDrag}
               >
                 {cell.isVisible && (
                   <img 

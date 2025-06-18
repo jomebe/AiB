@@ -535,7 +535,7 @@ html, body {
 }
 
 /* 반응형 디자인 */
-@media (max-width: 1400px) {
+/* @media (max-width: 1400px) {
   .game-board {
     width: 1150px;
     height: 850px;
@@ -546,7 +546,7 @@ html, body {
   .timer-container {
     height: 850px;
   }
-}
+} */
 
 @media (max-width: 1200px) {
   .game-area {

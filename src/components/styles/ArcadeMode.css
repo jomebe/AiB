@@ -61,8 +61,8 @@
 
 .game-board {
   position: relative;
-  width: 900px;
-  height: 600px;
+  width: 900px !important;
+  height: 600px !important;
   background-color: #f2fdef;
   border-radius: 12px;
   padding: 20px;
