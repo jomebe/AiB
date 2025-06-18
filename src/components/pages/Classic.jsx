@@ -12,6 +12,7 @@ import Apple7 from '../../images/apple7.svg';
 
 function Classic({ onBack }) {
   const [selectedMode, setSelectedMode] = useState(null);
+  const [showRankings, setShowRankings] = useState(false);
 
   const handleClassicApple = () => {
     setSelectedMode('classic');
@@ -19,6 +20,10 @@ function Classic({ onBack }) {
 
   const handleTimeAttack = () => {
     setSelectedMode('timeAttack');
+  };
+
+  const handleRankings = () => {
+    setShowRankings(true);
   };
 
   // 선택된 모드에 따라 컴포넌트 렌더링
@@ -32,28 +37,27 @@ function Classic({ onBack }) {
 
   const renderModeSelection = () => {
     return (
-      <div className="mode-selection-container">
-        <div className="mode-card" onClick={handleClassicApple}>
-          <div className="apple-grid">
-            <div className="apple-item"><img src={Apple5} alt="5" /></div>
-            <div className="apple-item"><img src={Apple7} alt="7" /></div>
-            <div className="apple-item"><img src={Apple6} alt="6" /></div>
-            <div className="apple-item"><img src={Apple2} alt="2" /></div>
-            <div className="apple-item"><img src={Apple1} alt="1" /></div>
-            <div className="apple-item"><img src={Apple4} alt="4" /></div>
+      <div className="mode-selection-container">        <div className="mode-card" onClick={handleClassicApple}>
+          <div className="apple-grid classic-grid">
             <div className="apple-item"><img src={Apple3} alt="3" /></div>
+            <div className="apple-item"><img src={Apple5} alt="5" /></div>
+            <div className="apple-item"><img src={Apple2} alt="2" /></div>
+            <div className="apple-item"><img src={Apple7} alt="7" /></div>
+            <div className="apple-item"><img src={Apple1} alt="1" /></div>
+            <div className="apple-item"><img src={Apple6} alt="6" /></div>
+            <div className="apple-item"><img src={Apple4} alt="4" /></div>
           </div>
           <div className="mode-title">Classic Apple</div>
         </div>
         <div className="mode-card" onClick={handleTimeAttack}>
           <div className="apple-grid time-attack-grid">
-            <div className="apple-item"><img src={Apple5} alt="5" /></div>
-            <div className="apple-item"><img src={Apple3} alt="3" /></div>
-            <div className="apple-item"><img src={Apple6} alt="6" /></div>
-            <div className="apple-item"><img src={Apple7} alt="7" /></div>
-            <div className="apple-item"><img src={Apple2} alt="8" /></div>
+            <div className="apple-item"><img src={Apple1} alt="1" /></div>
             <div className="apple-item"><img src={Apple2} alt="2" /></div>
             <div className="apple-item"><img src={Apple3} alt="3" /></div>
+            <div className="apple-item"><img src={Apple4} alt="4" /></div>
+            <div className="apple-item"><img src={Apple5} alt="5" /></div>
+            <div className="apple-item"><img src={Apple6} alt="6" /></div>
+            <div className="apple-item"><img src={Apple7} alt="7" /></div>
             <div className="apple-item"><img src={Apple1} alt="1" /></div>
             <div className="apple-item"><img src={Apple2} alt="2" /></div>
           </div>
@@ -73,7 +77,6 @@ function Classic({ onBack }) {
         return renderModeSelection();
     }
   };
-
   return (
     <div className="classic-container">
       <div className="game-container">
@@ -87,6 +90,13 @@ function Classic({ onBack }) {
         )}
         <button className="back-button" onClick={onBack}>메인으로 돌아가기</button>
       </div>
+      
+      {/* 랭킹 버튼 - 모드 선택 화면에서만 표시 */}
+      {!selectedMode && (
+        <button className="ranking-button" onClick={handleRankings}>
+          <span className="trophy-icon">🏆</span>
+        </button>
+      )}
     </div>
   );
 }

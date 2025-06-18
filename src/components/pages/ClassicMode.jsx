@@ -28,6 +28,7 @@ const ClassicMode = ({ onBack }) => {
   const [gameOver, setGameOver] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
   const [applesRemoved, setApplesRemoved] = useState(0);
+  const [showRanking, setShowRanking] = useState(false);
   
   const gameBoardRef = useRef(null);
   const selectionBoxRef = useRef(null);
@@ -48,21 +49,22 @@ const ClassicMode = ({ onBack }) => {
     default: AppleDefault
   };
   
-  // 드래그 방지 핸들러
+  // 드래그 방지 함수들
   const preventDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
     return false;
   };
   
-  // 컨텍스트 메뉴(우클릭 메뉴) 방지
   const preventContextMenu = (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    
-    // 드래그 중이면 선택 상태 초기화
-    cleanupSelection();
     return false;
+  };
+
+  const handleRankingClick = () => {
+    setShowRanking(true);
+    // TODO: 랭킹 모달/페이지 표시 로직
+    console.log('랭킹 조회 요청');
   };
   
   // 전역 마우스 업 이벤트 핸들러
@@ -407,6 +409,11 @@ const ClassicMode = ({ onBack }) => {
           </div>
         </div>
       )}
+      
+      {/* 랭킹 버튼 */}
+      <button className="ranking-button" onClick={handleRankingClick}>
+        <span className="trophy-icon">🏆</span>
+      </button>
     </div>
   );
 };

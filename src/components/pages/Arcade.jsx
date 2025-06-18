@@ -13,9 +13,16 @@ import GoldenApple from '../../images/goldenapple.svg';
 
 function Arcade({ onBack }) {
   const [selectedMode, setSelectedMode] = useState(null);
+  const [showRanking, setShowRanking] = useState(false);
 
   const handleModeSelect = (mode) => {
     setSelectedMode(mode);
+  };
+
+  const handleRankingClick = () => {
+    setShowRanking(true);
+    // TODO: 랭킹 모달/페이지 표시 로직
+    console.log('랭킹 조회 요청');
   };
   
   // 드래그 방지 함수
@@ -105,8 +112,15 @@ function Arcade({ onBack }) {
         )}
         <button className="back-button" onClick={onBack}>메인으로 돌아가기</button>
       </div>
+      
+      {/* 랭킹 버튼 */}
+      {!selectedMode && (
+        <button className="ranking-button" onClick={handleRankingClick}>
+          <span className="trophy-icon">🏆</span>
+        </button>
+      )}
     </div>
   );
 }
 
-export default Arcade; 
+export default Arcade;

@@ -353,6 +353,39 @@
   background-color: #FFCCCC !important;
 } 
 
+/* 랭킹 버튼 스타일 */
+.ranking-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.ranking-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.6);
+}
+
+.ranking-button:active {
+  transform: scale(0.95);
+}
+
+.trophy-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
 /* 드래그 선택 방지 */
 .arcade-container *::selection {
   background: transparent;
