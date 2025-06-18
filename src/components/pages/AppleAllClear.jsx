@@ -66,28 +66,49 @@ const AppleAllClear = ({ onBack }) => {
     }
     setGameBoard(newBoard);
   };
-
-  // 게임 시작
-  const startGame = () => {
-    initializeBoard();
+  // 게임 초기화
+  const initGame = () => {
     setScore(0);
+    setSelectedCells([]);
+    setGameOver(false);
     setTimeLeft(GAME_TIME);
     setApplesRemoved(0);
-    setGameOver(false);
     setAllClear(false);
-    setSelectedCells([]);
+    
+    // 기존 타이머 정리
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
     
     // 타이머 시작
-    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 1) {
+          clearInterval(timerRef.current);
           setGameOver(true);
           return 0;
         }
-        return prev - 1;
+        return prevTime - 1;
       });
     }, 1000);
+    
+    // 게임 보드 새로 생성
+    generateBoard();
+  };
+  
+  // 랜덤 숫자 생성 (1~9)
+  const getRandomAppleValue = () => {
+    return Math.floor(Math.random() * 9) + 1;
+  };
+  
+  // 게임 보드 생성
+  const generateBoard = () => {
+    // 10x15 배열 생성 (세로 10줄, 가로 15칸)
+    const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
+      Array(BOARD_SIZE_X).fill().map(() => getRandomAppleValue())
+    );
+    
+    setGameBoard(newBoard);
   };
 
   // 선택된 영역의 합계 계산
@@ -127,65 +148,162 @@ const AppleAllClear = ({ onBack }) => {
     }
     return false;
   };
-
   // 마우스 다운 이벤트
   const handleMouseDown = (e) => {
+    // 우클릭 무시
+    if (e.button === 2) return;
+    
     if (gameOver) return;
-    
-    e.preventDefault();
     mouseIsDownRef.current = true;
+    
+    const boardRect = gameBoardRef.current.getBoundingClientRect();
+    const x = e.clientX - boardRect.left;
+    const y = e.clientY - boardRect.top;
+    
     setIsSelecting(true);
-    
-    const rect = gameBoardRef.current.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / (rect.width / BOARD_SIZE_X));
-    const y = Math.floor((e.clientY - rect.top) / (rect.height / BOARD_SIZE_Y));
-    
+    setSelectedCells([]);
     setStartPos({ x, y });
-    setSelectedCells([{ x, y }]);
+    
+    // 선택 상자 생성
+    createSelectionBox(x, y);
+    
+    // 텍스트 선택 방지
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   // 마우스 이동 이벤트
   const handleMouseMove = (e) => {
-    if (!mouseIsDownRef.current || gameOver) return;
+    if (!isSelecting || !mouseIsDownRef.current) return;
     
+    const boardRect = gameBoardRef.current.getBoundingClientRect();
+    const x = e.clientX - boardRect.left;
+    const y = e.clientY - boardRect.top;
+    
+    updateSelectionBox(x, y);
+    updateSelectedCells();
+    
+    // 텍스트 선택 방지
     e.preventDefault();
-    const rect = gameBoardRef.current.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / (rect.width / BOARD_SIZE_X));
-    const y = Math.floor((e.clientY - rect.top) / (rect.height / BOARD_SIZE_Y));
-    
-    // 드래그 영역 계산
-    const minX = Math.min(startPos.x, x);
-    const maxX = Math.max(startPos.x, x);
-    const minY = Math.min(startPos.y, y);
-    const maxY = Math.max(startPos.y, y);
-    
-    const newSelectedCells = [];
-    for (let cy = minY; cy <= maxY; cy++) {
-      for (let cx = minX; cx <= maxX; cx++) {
-        if (cx >= 0 && cx < BOARD_SIZE_X && cy >= 0 && cy < BOARD_SIZE_Y) {
-          if (gameBoard[cy]?.[cx] > 0) { // 빈 칸이 아닌 경우만 선택
-            newSelectedCells.push({ x: cx, y: cy });
-          }
-        }
-      }
-    }
-    
-    setSelectedCells(newSelectedCells);
+    e.stopPropagation();
   };
 
-  // 마우스 업 이벤트
-  const handleMouseUp = () => {
-    if (!mouseIsDownRef.current) return;
+  // 선택 상태 완전 정리
+  const cleanupSelection = () => {
+    // 모든 셀에서 선택 클래스 제거
+    document.querySelectorAll('.apple-cell').forEach(cell => {
+      cell.classList.remove('selected');
+    });
+    
+    // 선택 상자 제거
+    if (selectionBoxRef.current) {
+      selectionBoxRef.current.remove();
+      selectionBoxRef.current = null;
+    }
     
     mouseIsDownRef.current = false;
     setIsSelecting(false);
+    setSelectedCells([]);
+  };
+
+  // 마우스 업 이벤트
+  const handleMouseUp = (e) => {
+    if (!isSelecting) return;
     
-    const success = removeSelectedApples();
-    if (!success) {
-      setSelectedCells([]);
-    } else {
-      setSelectedCells([]);
+    checkSelection();
+    cleanupSelection();
+    
+    // 텍스트 선택 방지
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
     }
+  };
+
+  // 마우스 리브 이벤트
+  const handleMouseLeave = (e) => {
+    if (isSelecting) {
+      handleMouseUp(e);
+    }
+  };
+
+  // 선택 상자 생성
+  const createSelectionBox = (x, y) => {
+    const selectionBox = document.createElement('div');
+    selectionBox.className = 'selection-box';
+    selectionBox.style.left = `${x}px`;
+    selectionBox.style.top = `${y}px`;
+    selectionBox.style.width = '0';
+    selectionBox.style.height = '0';
+    
+    gameBoardRef.current.appendChild(selectionBox);
+    selectionBoxRef.current = selectionBox;
+  };
+
+  // 선택 상자 업데이트
+  const updateSelectionBox = (x, y) => {
+    if (!selectionBoxRef.current) return;
+    
+    const { x: startX, y: startY } = startPos;
+    const width = Math.abs(x - startX);
+    const height = Math.abs(y - startY);
+    
+    const left = Math.min(startX, x);
+    const top = Math.min(startY, y);
+    
+    selectionBoxRef.current.style.left = `${left}px`;
+    selectionBoxRef.current.style.top = `${top}px`;
+    selectionBoxRef.current.style.width = `${width}px`;
+    selectionBoxRef.current.style.height = `${height}px`;
+  };
+
+  // 선택된 셀들 업데이트
+  const updateSelectedCells = () => {
+    if (!selectionBoxRef.current) return;
+    
+    const selectionRect = selectionBoxRef.current.getBoundingClientRect();
+    const boardRect = gameBoardRef.current.getBoundingClientRect();
+    
+    const relativeRect = {
+      left: selectionRect.left - boardRect.left,
+      top: selectionRect.top - boardRect.top,
+      right: selectionRect.right - boardRect.left,
+      bottom: selectionRect.bottom - boardRect.top
+    };
+    
+    const newSelectedCells = [];
+    
+    // 모든 셀에서 선택 클래스 제거
+    document.querySelectorAll('.apple-cell').forEach(cell => {
+      cell.classList.remove('selected');
+    });
+    
+    // 각 셀이 선택 영역과 겹치는지 확인
+    gameBoard.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        if (cell === 0) return; // 빈 셀은 제외
+        
+        const cellLeft = 83 + colIndex * 49;
+        const cellTop = 55 + rowIndex * 49;
+        const cellRight = cellLeft + 48;
+        const cellBottom = cellTop + 48;
+        
+        // 겹침 검사
+        if (cellLeft < relativeRect.right && cellRight > relativeRect.left &&
+            cellTop < relativeRect.bottom && cellBottom > relativeRect.top) {
+          
+          newSelectedCells.push({ x: colIndex, y: rowIndex });
+          
+          // DOM에서 해당 셀에 selected 클래스 추가
+          const cellElement = document.querySelector(`[data-row="${rowIndex}"][data-col="${colIndex}"]`);
+          if (cellElement) {
+            cellElement.classList.add('selected');
+          }
+        }
+      });
+    });
+    
+    setSelectedCells(newSelectedCells);
   };
 
   // 전역 마우스 이벤트 리스너
@@ -200,10 +318,9 @@ const AppleAllClear = ({ onBack }) => {
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
   }, []);
-
   // 컴포넌트 마운트 시 게임 시작
   useEffect(() => {
-    startGame();
+    initGame();
     
     return () => {
       if (timerRef.current) {
@@ -217,6 +334,57 @@ const AppleAllClear = ({ onBack }) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // 선택 검사
+  const checkSelection = () => {
+    if (selectedCells.length < 2) return;
+    
+    // 선택된 셀의 값 합계 계산
+    const sum = selectedCells.reduce((total, cell) => {
+      const cellValue = gameBoard[cell.y] && gameBoard[cell.y][cell.x];
+      return total + (cellValue || 0);
+    }, 0);
+    
+    if (sum === TARGET_SUM) {
+      // 성공적인 선택
+      const newBoard = [...gameBoard];
+      let removedCount = 0;
+      
+      selectedCells.forEach(({ x, y }) => {
+        if (newBoard[y] && newBoard[y][x] > 0) {
+          newBoard[y][x] = 0; // 사과 제거
+          removedCount++;
+        }
+      });
+      
+      setGameBoard(newBoard);
+      setScore(prevScore => prevScore + selectedCells.length * 10);
+      setApplesRemoved(prevCount => prevCount + removedCount);
+      
+      // 모든 사과가 제거되었는지 확인
+      const hasApples = newBoard.some(row => row.some(cell => cell > 0));
+      if (!hasApples) {
+        setAllClear(true);
+        setGameOver(true);
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+      }
+    }
+  };
+
+  // 드래그 방지 함수들
+  const preventDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+
+  const preventContextMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
   };
 
   return (
@@ -236,33 +404,34 @@ const AppleAllClear = ({ onBack }) => {
           </div>
         </div>
         <div className="time-display">Time: {formatTime(timeLeft)}</div>
-      </div>
-
-      <div 
+      </div>      <div 
+        ref={gameBoardRef} 
         className="game-board"
-        ref={gameBoardRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={() => {
-          mouseIsDownRef.current = false;
-          setIsSelecting(false);
-        }}
-      >
-        {gameBoard.map((row, y) =>
-          row.map((cell, x) => {
-            const isSelected = selectedCells.some(selected => selected.x === x && selected.y === y);
+        onMouseLeave={handleMouseLeave}
+        onDragStart={preventDrag}
+        onContextMenu={preventContextMenu}
+      >{/* 게임 보드를 행과 열로 명확하게 렌더링 */}
+        {Array.from({ length: BOARD_SIZE_Y }).map((_, rowIndex) => (
+          Array.from({ length: BOARD_SIZE_X }).map((_, colIndex) => {
+            const cell = gameBoard[rowIndex] && gameBoard[rowIndex][colIndex];
+            if (!cell) return null;
+            
+            const isSelected = selectedCells.some(selected => selected.x === colIndex && selected.y === rowIndex);
             const isEmpty = cell === 0;
             
             return (
               <div
-                key={`${x}-${y}`}
+                key={`${rowIndex}-${colIndex}`}
                 className={`board-cell ${isEmpty ? 'empty-cell' : 'apple-cell'} ${isSelected ? 'selected' : ''}`}
-                style={{
-                  left: `${(x / BOARD_SIZE_X) * 100}%`,
-                  top: `${(y / BOARD_SIZE_Y) * 100}%`,
-                  width: `${100 / BOARD_SIZE_X}%`,
-                  height: `${100 / BOARD_SIZE_Y}%`,
+                data-row={rowIndex}
+                data-col={colIndex}
+                data-value={cell}
+                style={{ 
+                  left: `${83 + colIndex * 49}px`, 
+                  top: `${55 + rowIndex * 49}px` 
                 }}
               >
                 {!isEmpty && (
@@ -276,7 +445,7 @@ const AppleAllClear = ({ onBack }) => {
               </div>
             );
           })
-        )}
+        ))}
         
         {/* 선택 박스 표시 */}
         {isSelecting && selectedCells.length > 0 && (
@@ -294,7 +463,7 @@ const AppleAllClear = ({ onBack }) => {
             <p>Score: {score}</p>
             <p>Apples Removed: {applesRemoved}</p>
             <div className="game-over-buttons">
-              <button onClick={startGame}>다시하기</button>
+              <button onClick={initGame}>다시하기</button>
               <button onClick={onBack}>뒤로가기</button>
             </div>
           </div>
@@ -303,7 +472,7 @@ const AppleAllClear = ({ onBack }) => {
 
       {/* 하단 컨트롤 */}
       <div className="game-controls">
-        <button onClick={startGame} className="control-button">
+        <button onClick={initGame} className="control-button">
           새 게임
         </button>
         <button onClick={onBack} className="control-button">

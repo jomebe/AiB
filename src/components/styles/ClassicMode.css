@@ -350,3 +350,201 @@ html, body {
   opacity: 0;
   transition: opacity 0.3s ease-out;
 }
+
+@media (max-width: 768px) {
+  .game-board {
+    grid-template-columns: repeat(15, 30px);
+    grid-template-rows: repeat(10, 30px);
+    gap: 3px;
+    padding: 30px;
+  }
+  
+  .board-cell {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .apple-image {
+    width: 25px;
+    height: 25px;
+  }
+}
+
+/* Time Attack 모드 스타일 */
+.time-attack-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 10px;
+  width: 520px;
+  height: 520px;
+  margin: 20px auto;
+  padding: 80px 60px 80px 100px;
+  background: #F2FDEF;
+  border-radius: 16px;
+  position: relative;
+  place-content: center;
+  place-items: center;
+}
+
+.time-attack-board .apple-cell {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.time-attack-board .apple-cell:hover {
+  transform: scale(1.05);
+}
+
+.time-attack-board .apple-cell.selected {
+  transform: scale(1.05);
+}
+
+.game-over-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #f2fdef 0%, #e8f5e8 100%);
+  border-radius: 20px;
+  padding: 50px 40px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  min-width: 350px;
+  max-width: 500px;
+  border: 2px solid #66BE6E;
+  transform: scale(0.8);
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+@keyframes scaleIn {
+  to {
+    transform: scale(1);
+  }
+}
+
+.modal-content h2 {
+  font-size: 32px;
+  color: #2d5016;
+  margin-bottom: 20px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content p {
+  font-size: 18px;
+  color: #4a4a4a;
+  margin: 15px 0;
+  font-weight: 500;
+}
+
+.restart-button, .back-to-menu-button {
+  font-size: 16px;
+  padding: 15px 30px;
+  margin: 15px 10px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.restart-button {
+  background: linear-gradient(45deg, #66BE6E, #4CAF50);
+  color: white;
+  border: 2px solid transparent;
+}
+
+.restart-button:hover {
+  background: linear-gradient(45deg, #4CAF50, #45a049);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.restart-button:active {
+  transform: translateY(0);
+}
+
+.back-to-menu-button {
+  background: linear-gradient(45deg, #f5f5f5, #e0e0e0);
+  color: #333;
+  border: 2px solid #d0d0d0;
+}
+
+.back-to-menu-button:hover {
+  background: linear-gradient(45deg, #e0e0e0, #d0d0d0);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-color: #bbb;
+}
+
+.back-to-menu-button:active {
+  transform: translateY(0);
+}
+
+/* 랭킹 버튼 스타일 */
+.ranking-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.ranking-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.6);
+}
+
+.ranking-button:active {
+  transform: scale(0.95);
+}
+
+.trophy-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}

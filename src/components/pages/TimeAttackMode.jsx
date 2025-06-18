@@ -26,6 +26,7 @@ const TimeAttackMode = ({ onBack }) => {  // 게임 설정
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
   const [applesRemoved, setApplesRemoved] = useState(0);
   const [noMoreMoves, setNoMoreMoves] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
   
   const gameBoardRef = useRef(null);
   const selectionBoxRef = useRef(null);
