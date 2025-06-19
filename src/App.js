@@ -18,7 +18,7 @@ const Container = styled.div`
 const Title = styled.h1`
   font-size: 80px;
   font-weight: 700;
-  color: #F2FDEF;
+  color:rgb(255, 255, 255);
   margin-bottom: 80px;
   text-align: center;
   letter-spacing: -0.02em;
@@ -33,7 +33,7 @@ const GameModeContainer = styled.div`
 const GameMode = styled.div`
   width: 400px;
   height: 160px;
-  background: #F2FDEF;
+  background:rgb(255, 255, 255);
   border-radius: 24px;
   display: flex;
   flex-direction: row;

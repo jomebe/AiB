@@ -320,12 +320,12 @@ html, body {
 }
 
 .back-button {
-  background-color: #F2FDEF !important;
+  background-color: #ffffff !important;
   color: #000000 !important;
 }
 
 .back-button:hover {
-  background-color: #F2FDEF !important;
+  background-color: #ffffff !important;
 }
 
 .game-over-overlay {
