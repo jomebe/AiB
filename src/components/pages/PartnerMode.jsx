@@ -41,10 +41,9 @@ try {
 }
 
 const PartnerMode = ({ onBack }) => {
-    console.log('PartnerMode component loaded'); // 디버깅용
-      // 게임 설정
-    const BOARD_SIZE_X = 17;
-    const BOARD_SIZE_Y = 10;
+    console.log('PartnerMode component loaded'); // 디버깅용      // 게임 설정 - ClassicMode와 동일하게
+    const BOARD_SIZE_X = 15; // 가로 칸 수 (ClassicMode와 동일)
+    const BOARD_SIZE_Y = 10; // 세로 칸 수 (ClassicMode와 동일)
     const TARGET_SUM = 10;
     const MAX_APPLE_VALUE = 9;
     const TIMER_DURATION = 60; // 1분
@@ -73,21 +72,20 @@ const PartnerMode = ({ onBack }) => {
     const [score, setScore] = useState(0);
     const [partnerScore, setPartnerScore] = useState(0);
     const [remainingTime, setRemainingTime] = useState(TIMER_DURATION);
-    const [gameOver, setGameOver] = useState(false);
-    const [selectedCells, setSelectedCells] = useState([]);
+    const [gameOver, setGameOver] = useState(false);    const [selectedCells, setSelectedCells] = useState([]);
     const [partnerSelectedCells, setPartnerSelectedCells] = useState([]);
-    const [isSelecting, setIsSelecting] = useState(false);
-    const [selectionBox, setSelectionBox] = useState(null);    const [isHost, setIsHost] = useState(false);
+    const [isSelecting, setIsSelecting] = useState(false);const [isHost, setIsHost] = useState(false);
     const [otherPlayerName, setOtherPlayerName] = useState('');
     const [otherPlayerCursor, setOtherPlayerCursor] = useState({ x: 0, y: 0 });
     const [currentUser, setCurrentUser] = useState(null);
     const [showLogin, setShowLogin] = useState(false);
     const [showRankings, setShowRankings] = useState(false);
     const [gameStartTime, setGameStartTime] = useState(null);
-    
-    // refs
+      // refs - ClassicMode와 동일한 구조
     const gameBoardRef = useRef(null);
     const timerRef = useRef(null);
+    const selectionBoxRef = useRef(null);
+    const mouseIsDownRef = useRef(false); // 마우스 버튼 상태를 추적하는 ref
     const playerId = useRef(Math.random().toString(36).substring(2, 15));
     const gameId = useRef(null);
     const otherPlayerId = useRef(null);
@@ -95,10 +93,20 @@ const PartnerMode = ({ onBack }) => {
     const startPos = useRef({ x: 0, y: 0 });
     const audioContext = useRef(null);
     const gameRef = useRef(null);
-    const playersRef = useRef(null);
-
-    // 랜덤 숫자 생성
+    const playersRef = useRef(null);    // 랜덤 숫자 생성
     const getRandomAppleValue = () => Math.floor(Math.random() * MAX_APPLE_VALUE) + 1;
+
+    // 드래그 방지 함수들 - ClassicMode와 동일
+    const preventDrag = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    };
+    
+    const preventContextMenu = (e) => {
+        e.preventDefault();
+        return false;
+    };
 
     // 오디오 컨텍스트 초기화
     const initAudioContext = useCallback(() => {
@@ -425,9 +433,7 @@ const PartnerMode = ({ onBack }) => {
             setStatusMessage('게임 참가 중 오류가 발생했습니다.');
             setTimeout(resetToLobby, 2000);
         }
-    };
-
-    // 멀티플레이어 게임 시작
+    };    // 멀티플레이어 게임 시작
     const startMultiplayerGame = (board) => {
         console.log('Starting multiplayer game with board:', board.length, 'rows x', board[0]?.length, 'cols');
         setGameState('playing');
@@ -435,9 +441,17 @@ const PartnerMode = ({ onBack }) => {
         setScore(0);
         setPartnerScore(0);
 
-        // 호스트만 타이머를 초기화하고, 비호스트는 Firebase에서 받은 값 사용
+        // 호스트만 타이머를 초기화하고 Firebase에 설정
         if (isHost) {
+            console.log('Host initializing timer to', TIMER_DURATION);
             setRemainingTime(TIMER_DURATION);
+            // Firebase에 초기 타이머 값 설정
+            if (gameId.current) {
+                set(ref(database, `games/${gameId.current}/timer`), TIMER_DURATION);
+            }
+        } else {
+            console.log('Non-host waiting for timer from Firebase');
+            // 비호스트는 Firebase에서 타이머 값을 받을 때까지 대기
         }
 
         setSelectedCells([]);
@@ -483,11 +497,16 @@ const PartnerMode = ({ onBack }) => {
             if (gameData.gameBoard) {
                 console.log('Received board from Firebase:', gameData.gameBoard.length, 'rows x', gameData.gameBoard[0]?.length, 'cols');
                 setGameBoard(gameData.gameBoard);
-            }
-
-            // 타이머 동기화 (호스트가 아닌 경우만)
+            }            // 타이머 동기화 (호스트가 아닌 경우만)
             if (typeof gameData.timer === 'number' && !isHost) {
+                console.log('Non-host receiving timer update from Firebase:', gameData.timer);
                 setRemainingTime(gameData.timer);
+                
+                // 게임 종료 체크
+                if (gameData.timer <= 0) {
+                    console.log('Timer reached 0 via Firebase sync, ending game...');
+                    endGame();
+                }
             }
 
             // 게임 상태 확인
@@ -513,15 +532,17 @@ const PartnerMode = ({ onBack }) => {
                 setPartnerSelectedCells(selectionData);
             }
         });
-    };
-
-    // 타이머 시작
+    };    // 타이머 시작 - 호스트만 실행
     const startTimer = () => {
+        console.log('startTimer called - isHost:', isHost, 'playerId:', playerId.current);
+        
         if (isHost) {
+            console.log('Host starting timer...');
             // 호스트만 타이머를 실제로 관리
             timerRef.current = setInterval(async () => {
                 setRemainingTime(prev => {
-                    const newTime = prev - 1;
+                    const newTime = Math.max(0, prev - 1);
+                    console.log('Host timer update:', newTime);
 
                     // Firebase에 타이머 업데이트
                     if (gameId.current) {
@@ -529,20 +550,27 @@ const PartnerMode = ({ onBack }) => {
                     }
 
                     if (newTime <= 0) {
+                        console.log('Timer reached 0, ending game...');
                         endGame();
                         return 0;
                     }
                     return newTime;
                 });
             }, 1000);
+        } else {
+            console.log('Non-host player, waiting for timer updates from Firebase...');
+            // 비호스트는 Firebase 리스너를 통해서만 타이머 값을 받음
         }
-        // 비호스트는 Firebase 리스너를 통해서만 타이머 값을 받음
-    };
-
-    // 게임 종료
+    };    // 게임 종료
     const endGame = async () => {
+        console.log('endGame called - isHost:', isHost, 'gameOver:', gameOver);
+        
+        // 이미 게임이 종료된 경우 중복 실행 방지
+        if (gameOver) return;
+        
         // 호스트만 타이머 정리
         if (isHost) {
+            console.log('Host clearing timer...');
             clearInterval(timerRef.current);
         }
 
@@ -551,8 +579,10 @@ const PartnerMode = ({ onBack }) => {
 
         // 호스트만 게임 상태 업데이트
         if (isHost && gameId.current) {
+            console.log('Host updating game status to ended...');
             try {
                 await set(ref(database, `games/${gameId.current}/status`), 'ended');
+                await set(ref(database, `games/${gameId.current}/timer`), 0);
             } catch (error) {
                 console.error('게임 종료 업데이트 오류:', error);
             }
@@ -640,25 +670,37 @@ const PartnerMode = ({ onBack }) => {
         } catch (error) {
             console.error('게임에서 플레이어 제거 오류:', error);
         }
+    };    // 전역 마우스 업 이벤트 핸들러 - ClassicMode와 동일
+    const handleGlobalMouseUp = (e) => {
+        mouseIsDownRef.current = false;
+        
+        if (isSelecting) {
+            handleMouseUp(e);
+        }
     };
 
-    // 마우스 이벤트 핸들러
+    // 마우스 이벤트 핸들러 - ClassicMode와 동일
     const handleMouseDown = (e) => {
+        // 우클릭 무시
+        if (e.button === 2) return;
+        
         if (gameOver || gameState !== 'playing') return;
-
-        const rect = gameBoardRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        startPos.current = { x, y };
+        mouseIsDownRef.current = true;
+        
+        const boardRect = gameBoardRef.current.getBoundingClientRect();
+        const x = e.clientX - boardRect.left;
+        const y = e.clientY - boardRect.top;
+        
         setIsSelecting(true);
-
-        setSelectionBox({
-            left: x,
-            top: y,
-            width: 0,
-            height: 0
-        });
+        setSelectedCells([]);
+        startPos.current = { x, y };
+        
+        // 선택 상자 생성
+        createSelectionBox(x, y);
+        
+        // 텍스트 선택 방지
+        e.preventDefault();
+        e.stopPropagation();
 
         // 커서 위치 전송
         if (gameId.current) {
@@ -670,19 +712,18 @@ const PartnerMode = ({ onBack }) => {
     };
 
     const handleMouseMove = (e) => {
-        if (!isSelecting || gameOver || gameState !== 'playing') return;
-
-        const rect = gameBoardRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        const left = Math.min(startPos.current.x, x);
-        const top = Math.min(startPos.current.y, y);
-        const width = Math.abs(x - startPos.current.x);
-        const height = Math.abs(y - startPos.current.y);
-
-        setSelectionBox({ left, top, width, height });
-        updateSelectedCells(left, top, width, height);
+        if (!isSelecting || !mouseIsDownRef.current) return;
+        
+        const boardRect = gameBoardRef.current.getBoundingClientRect();
+        const x = e.clientX - boardRect.left;
+        const y = e.clientY - boardRect.top;
+        
+        updateSelectionBox(x, y);
+        updateSelectedCells();
+        
+        // 텍스트 선택 방지
+        e.preventDefault();
+        e.stopPropagation();
 
         // 커서 위치 전송
         if (gameId.current) {
@@ -693,59 +734,150 @@ const PartnerMode = ({ onBack }) => {
         }
     };
 
-    const handleMouseUp = () => {
-        if (!isSelecting) return;
-
+    // 선택 상태 완전 정리 - ClassicMode와 동일
+    const cleanupSelection = () => {
+        // 모든 셀에서 선택 클래스 제거
+        document.querySelectorAll('.apple-cell').forEach(cell => {
+            cell.classList.remove('selected');
+        });
+        
+        // 선택 상자 제거
+        if (selectionBoxRef.current) {
+            selectionBoxRef.current.remove();
+            selectionBoxRef.current = null;
+        }
+        
+        mouseIsDownRef.current = false;
         setIsSelecting(false);
+        setSelectedCells([]);
+    };
+
+    const handleMouseUp = (e) => {
+        if (!isSelecting) return;
+        
         checkSelection();
-        setSelectionBox(null);
+        cleanupSelection();
+        
+        // 텍스트 선택 방지
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
         // 선택 영역 전송
         if (gameId.current) {
             set(ref(database, `games/${gameId.current}/selections/${playerId.current}`), selectedCells);
         }
-    };    // 선택된 셀 업데이트
-    const updateSelectedCells = (left, top, width, height) => {
-        const cells = [];
-        const cellWidth = gameBoardRef.current.offsetWidth / BOARD_SIZE_X;
-        const cellHeight = gameBoardRef.current.offsetHeight / BOARD_SIZE_Y;
+    };
 
-        const startCol = Math.floor(left / cellWidth);
-        const endCol = Math.floor((left + width) / cellWidth);
-        const startRow = Math.floor(top / cellHeight);
-        const endRow = Math.floor((top + height) / cellHeight);
-
-        for (let row = Math.max(0, startRow); row <= Math.min(BOARD_SIZE_Y - 1, endRow); row++) {
-            for (let col = Math.max(0, startCol); col <= Math.min(BOARD_SIZE_X - 1, endCol); col++) {
-                if (gameBoard[row] && gameBoard[row][col] && gameBoard[row][col].isVisible) {
-                    cells.push({ row, col });
-                }
-            }
+    // 마우스 리브 이벤트 - ClassicMode와 동일
+    const handleMouseLeave = (e) => {
+        if (isSelecting) {
+            handleMouseUp(e);
         }
-
-        setSelectedCells(cells);
-    };    // 선택 확인
+    };
+    
+    // 선택 상자 생성 - ClassicMode와 동일
+    const createSelectionBox = (x, y) => {
+        const selectionBox = document.createElement('div');
+        selectionBox.className = 'selection-box';
+        selectionBox.style.left = `${x}px`;
+        selectionBox.style.top = `${y}px`;
+        selectionBox.style.width = '0';
+        selectionBox.style.height = '0';
+        
+        gameBoardRef.current.appendChild(selectionBox);
+        selectionBoxRef.current = selectionBox;
+    };
+    
+    // 선택 상자 업데이트 - ClassicMode와 동일
+    const updateSelectionBox = (x, y) => {
+        if (!selectionBoxRef.current) return;
+        
+        const { x: startX, y: startY } = startPos.current;
+        const width = Math.abs(x - startX);
+        const height = Math.abs(y - startY);
+        
+        const left = Math.min(startX, x);
+        const top = Math.min(startY, y);
+        
+        selectionBoxRef.current.style.left = `${left}px`;
+        selectionBoxRef.current.style.top = `${top}px`;
+        selectionBoxRef.current.style.width = `${width}px`;
+        selectionBoxRef.current.style.height = `${height}px`;
+    };    // 선택된 셀 업데이트 - ClassicMode와 동일
+    const updateSelectedCells = () => {
+        if (!selectionBoxRef.current) return;
+        
+        const selectionRect = selectionBoxRef.current.getBoundingClientRect();
+        const cells = document.querySelectorAll('.apple-cell');
+        const selectedCellsData = [];
+        
+        cells.forEach(cell => {
+            cell.classList.remove('selected');
+            
+            if (!cell.dataset.value) return;
+            
+            const cellRect = cell.getBoundingClientRect();
+            
+            // 셀의 중심점
+            const cellCenterX = cellRect.left + cellRect.width / 2;
+            const cellCenterY = cellRect.top + cellRect.height / 2;
+            
+            // 중심점이 선택 상자 내에 있는지 확인
+            if (
+                cellCenterX >= selectionRect.left &&
+                cellCenterX <= selectionRect.right &&
+                cellCenterY >= selectionRect.top &&
+                cellCenterY <= selectionRect.bottom
+            ) {
+                cell.classList.add('selected');
+                
+                selectedCellsData.push({
+                    row: parseInt(cell.dataset.row),
+                    col: parseInt(cell.dataset.col),
+                    value: parseInt(cell.dataset.value)
+                });
+            }
+        });
+        
+        setSelectedCells(selectedCellsData);
+    };    // 선택 확인 - ClassicMode와 유사하게 수정
     const checkSelection = async () => {
-        if (selectedCells.length === 0) return;
+        if (selectedCells.length < 2) return;
 
-        const sum = selectedCells.reduce((total, { row, col }) => total + gameBoard[row][col].value, 0);
+        const sum = selectedCells.reduce((total, cell) => total + cell.value, 0);
+        console.log('선택된 셀:', selectedCells, '합계:', sum);
 
         if (sum === TARGET_SUM) {
-            // 성공 처리
             createPopSound();
-            const newScore = score + selectedCells.length;
+            const newScore = score + sum * selectedCells.length;
+            console.log('점수 업데이트:', score, '->', newScore);
+            
             setScore(newScore);
 
-            // 보드 업데이트 - 클래식 모드처럼 isVisible을 false로 설정
-            const newBoard = gameBoard.map(row => [...row]);
-            selectedCells.forEach(({ row, col }) => {
-                newBoard[row][col].isVisible = false;
-            });
-            setGameBoard(newBoard);
-
-            // Firebase에 업데이트
+            // 애니메이션 효과를 위해 선택된 셀에 클래스 추가
+            selectedCells.forEach(cell => {
+                const cellElement = document.querySelector(`.board-cell[data-row="${cell.row}"][data-col="${cell.col}"] .apple-image`);
+                if (cellElement) {
+                    // 펑 터지는 애니메이션 적용
+                    cellElement.classList.add('apple-explode');
+                    
+                    // 애니메이션이 끝나면 사과 제거
+                    setTimeout(() => {
+                        const newBoard = [...gameBoard];
+                        newBoard[cell.row][cell.col].isVisible = false;
+                        setGameBoard(newBoard);
+                    }, 250); // 애니메이션 시간과 맞춤 (0.25초)
+                }
+            });            // Firebase에 업데이트
             if (gameId.current) {
                 try {
+                    const newBoard = gameBoard.map(row => [...row]);
+                    selectedCells.forEach(({ row, col }) => {
+                        newBoard[row][col].isVisible = false;
+                    });
+                    
                     await set(ref(database, `games/${gameId.current}/gameBoard`), newBoard);
                     await set(ref(database, `games/${gameId.current}/scores/${playerId.current}`), newScore);
                 } catch (error) {
@@ -753,19 +885,34 @@ const PartnerMode = ({ onBack }) => {
                 }
             }
 
-            // 해결책이 없으면 게임 종료
-            if (!hasSolution(newBoard)) {
+            // 해결책이 없으면 게임 종료 (newBoard를 재정의)
+            const updatedBoard = gameBoard.map(row => [...row]);
+            selectedCells.forEach(({ row, col }) => {
+                updatedBoard[row][col].isVisible = false;
+            });
+            
+            if (!hasSolution(updatedBoard)) {
                 setTimeout(endGame, 500);
             }
         }
 
         setSelectedCells([]);
-    };
-
-    // 컴포넌트 마운트/언마운트 시 처리
+    };    // 컴포넌트 마운트/언마운트 시 처리
     useEffect(() => {
+        // 인증 상태 확인
+        setCurrentUser(AuthService.getCurrentUser());
+        
+        // 인증 상태 변경 리스너 등록
+        const unsubscribe = AuthService.addListener((user) => {
+            setCurrentUser(user);
+        });
+
         // 컴포넌트 마운트 시 Firebase 데이터 초기화
         clearFirebaseData();
+
+        // 전역 이벤트 리스너 추가 - ClassicMode와 동일
+        document.addEventListener('mouseup', handleGlobalMouseUp);
+        document.addEventListener('contextmenu', preventContextMenu);
 
         // 브라우저 탭/창 닫힘 감지
         const handleBeforeUnload = () => {
@@ -779,6 +926,7 @@ const PartnerMode = ({ onBack }) => {
         window.addEventListener('beforeunload', handleBeforeUnload);
 
         return () => {
+            unsubscribe();
             clearInterval(timerRef.current);
             clearTimeout(matchingTimer.current);
 
@@ -789,6 +937,10 @@ const PartnerMode = ({ onBack }) => {
             if (playersRef.current) {
                 off(playersRef.current);
             }
+
+            // 전역 이벤트 리스너 제거 - ClassicMode와 동일
+            document.removeEventListener('mouseup', handleGlobalMouseUp);
+            document.removeEventListener('contextmenu', preventContextMenu);
 
             // 이벤트 리스너 제거
             window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -826,27 +978,8 @@ const PartnerMode = ({ onBack }) => {
         </div>
     );    // 게임 화면 렌더링
     const renderGame = () => (
-        <div className="game-container">
-            <div className="header">
+        <div className="game-container">            <div className="header">
                 <h1>사과 상자 게임 - 협동모드</h1>
-                <div className="score-display">
-                    <div className="total-score">
-                        <span className="score-label">총 점수</span>
-                        <span className="score-value">{(score || 0) + (partnerScore || 0)}</span>
-                    </div>
-                    <div className="individual-scores">
-                        <div className="player-score player1-score">
-                            <span className="player-color player1-color">●</span>
-                            <span className="player-name">{playerName || '플레이어1'}</span>
-                            <span className="score-value">{score || 0}</span>
-                        </div>
-                        <div className="player-score player2-score">
-                            <span className="player-color player2-color">●</span>
-                            <span className="player-name">{otherPlayerName || '플레이어2'}</span>
-                            <span className="score-value">{partnerScore || 0}</span>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div className="game-area">
@@ -854,49 +987,74 @@ const PartnerMode = ({ onBack }) => {
                     <div className="timer-display">
                         <span className="timer-value">{formatTime(remainingTime)}</span>
                     </div>
-                </div>
-
-                <div
-                    className="game-board partner-mode"
+                    
+                    {/* 점수 표시를 사이드바로 이동 */}
+                    <div className="score-display">
+                        <div className="total-score">
+                            <span className="score-label">총 점수</span>
+                            <span className="score-value">{(score || 0) + (partnerScore || 0)}</span>
+                        </div>
+                        <div className="individual-scores">
+                            <div className="player-score player1-score">
+                                <div className="player-info">
+                                    <span className="player-color player1-color">●</span>
+                                    <span className="player-name">{playerName || '플레이어1'}</span>
+                                </div>
+                                <span className="score-value">{score || 0}</span>
+                            </div>
+                            <div className="player-score player2-score">
+                                <div className="player-info">
+                                    <span className="player-color player2-color">●</span>
+                                    <span className="player-name">{otherPlayerName || '플레이어2'}</span>
+                                </div>
+                                <span className="score-value">{partnerScore || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div><div
+                    className="game-board"
                     ref={gameBoardRef}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
-                    onMouseLeave={() => setIsSelecting(false)}
-                >                    {gameBoard.map((row, rowIndex) =>
-                        row.map((cell, colIndex) => (
-                            <div
-                                key={`${rowIndex}-${colIndex}`}
-                                className={`cell ${!cell.isVisible ? 'empty' : 'apple'} ${
-                                    selectedCells.some(({ row, col }) => row === rowIndex && col === colIndex) ? 'selected' : ''
-                                } ${
-                                    partnerSelectedCells.some(({ row, col }) => row === rowIndex && col === colIndex) ? 'partner-selected' : ''
-                                }`}
-                            >
-                                {cell.isVisible && (
-                                    <img
-                                        src={appleImages[cell.value] || appleImages.default}
-                                        alt={`Apple ${cell.value}`}
-                                        className="apple-image"
-                                        draggable={false}
-                                    />
-                                )}
-                                <span className="cell-number">{cell.isVisible ? cell.value : ''}</span>
-                            </div>
-                        ))
-                    )}
-
-                    {selectionBox && (
-                        <div
-                            className="selection-box player1"
-                            style={{
-                                left: selectionBox.left,
-                                top: selectionBox.top,
-                                width: selectionBox.width,
-                                height: selectionBox.height
-                            }}
-                        />
-                    )}                </div>
+                    onMouseLeave={handleMouseLeave}
+                    onDragStart={preventDrag}
+                    onContextMenu={preventContextMenu}
+                >
+                    {/* 게임 보드를 행과 열로 명확하게 렌더링 - ClassicMode와 동일 */}
+                    {Array.from({ length: BOARD_SIZE_Y }).map((_, rowIndex) => (
+                        Array.from({ length: BOARD_SIZE_X }).map((_, colIndex) => {
+                            const cell = gameBoard[rowIndex] && gameBoard[rowIndex][colIndex];
+                            if (!cell) return null;
+                            
+                            return (
+                                <div 
+                                    key={`${rowIndex}-${colIndex}`} 
+                                    className={`board-cell ${cell.isVisible ? 'apple-cell' : 'empty-cell'}`}
+                                    data-row={rowIndex}
+                                    data-col={colIndex}
+                                    data-value={cell.value}
+                                    style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 1 }}
+                                    draggable="false"
+                                    onContextMenu={preventContextMenu}
+                                    onDragStart={preventDrag}
+                                    onSelectStart={preventDrag}
+                                >
+                                    {cell.isVisible && (
+                                        <img 
+                                            src={appleImages[cell.value] || appleImages.default} 
+                                            alt={`Apple ${cell.value}`} 
+                                            className="apple-image" 
+                                            draggable="false"
+                                            onDragStart={preventDrag}
+                                            onContextMenu={preventContextMenu}
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })
+                    )).flat()}
+                </div>
             </div>
         </div>
     );
@@ -913,13 +1071,62 @@ const PartnerMode = ({ onBack }) => {
         >
             <span className="player-name">{otherPlayerName}</span>
         </div>
-    );    return (
-        <div className="classic-mode-container">
+    );    // 랭킹 핸들러 - ClassicMode와 동일
+    const handleRankingClick = () => {
+        setShowRankings(true);
+    };
+
+    // 랭킹 팝업 닫기
+    const handleCloseRanking = () => {
+        setShowRankings(false);
+    };
+
+    // 로그인 성공 처리
+    const handleLoginSuccess = (user) => {
+        setCurrentUser(user);
+        setShowLogin(false);
+        console.log('로그인 성공:', user);
+    };
+
+    // 로그인 모달 닫기
+    const handleLoginClose = () => {
+        setShowLogin(false);
+        // 최신 인증 상태 확인
+        setCurrentUser(AuthService.getCurrentUser());
+    };
+
+    return (        <div className="classic-mode-container">
             <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'red', color: 'white', padding: '5px', zIndex: 9999 }}>
                 PartnerMode Loaded - State: {gameState}
             </div>
             {gameState === 'lobby' || gameState === 'matching' ? renderLobby() : renderGame()}
             {gameState === 'playing' && renderOtherPlayerCursor()}
+            
+            {/* 랭킹 버튼 - ClassicMode와 동일 */}
+            <button className="ranking-button" onClick={handleRankingClick}>
+                <span className="trophy-icon">🏆</span>
+            </button>
+            
+            {showLogin && (
+                <Login 
+                    onClose={handleLoginClose} 
+                    onLoginSuccess={handleLoginSuccess} 
+                    currentUser={currentUser}
+                />
+            )}
+            {showRankings && (
+                <div className="ranking-modal-overlay">
+                    <div className="ranking-modal-content">
+                        <div className="ranking-modal-header">
+                            <h2>🏆 랭킹</h2>
+                            <button onClick={handleCloseRanking} className="close-button">
+                                ×
+                            </button>
+                        </div>
+                        <Rankings onBack={handleCloseRanking} isModal={true} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
