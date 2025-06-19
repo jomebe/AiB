@@ -111,8 +111,8 @@ class ApiClient {
 
     // 플레이어 통계 API
     async getPlayerStats() {
-        return this.request('/players/stats');
-    }
+        return this.request('/players/stats');    }
 }
 
-export default new ApiClient();
+const apiClient = new ApiClient();
+export default apiClient;

@@ -26,10 +26,8 @@ const AppleAllClear = ({ onBack }) => {
   const [selectedCells, setSelectedCells] = useState([]);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [gameOver, setGameOver] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
-  const [applesRemoved, setApplesRemoved] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(GAME_TIME);  const [applesRemoved, setApplesRemoved] = useState(0);
   const [allClear, setAllClear] = useState(false);
-  const [showRanking, setShowRanking] = useState(false);
   
   const gameBoardRef = useRef(null);
   const selectionBoxRef = useRef(null);
@@ -61,9 +59,7 @@ const AppleAllClear = ({ onBack }) => {
     e.preventDefault();
     return false;
   };
-
   const handleRankingClick = () => {
-    setShowRanking(true);
     // TODO: 랭킹 모달/페이지 표시 로직
     console.log('랭킹 조회 요청');
   };
@@ -76,8 +72,7 @@ const AppleAllClear = ({ onBack }) => {
       handleMouseUp(e);
     }
   };
-  
-  // 초기화
+    // 초기화
   useEffect(() => {
     initGame();
     
@@ -91,11 +86,10 @@ const AppleAllClear = ({ onBack }) => {
       document.removeEventListener('contextmenu', preventContextMenu);
       
       // 타이머 정리
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
+      if (timerRef.current) {        clearInterval(timerRef.current);
       }
     };
-  }, []);
+  }, []); // 의존성 배열에서 함수들 제거
   
   const initGame = () => {
     setScore(0);

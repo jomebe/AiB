@@ -63,22 +63,6 @@ const ModeName = styled.span`
   pointer-events: none;
 `;
 
-const BackButton = styled.button`
-  padding: 10px 20px;
-  background-color: #F2FDEF;
-  border: none;
-  border-radius: 12px;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  
-  &:hover {
-    background-color: #E2EFE1;
-  }
-`;
-
 function App() {
   const [gameMode, setGameMode] = useState(null);
 

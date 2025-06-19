@@ -29,11 +29,9 @@ const ClassicMode = ({ onBack }) => {
   const [selectedCells, setSelectedCells] = useState([]);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [gameOver, setGameOver] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);  const [applesRemoved, setApplesRemoved] = useState(0);
-  const [showRanking, setShowRanking] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(GAME_TIME);  const [applesRemoved, setApplesRemoved] = useState(0);  const [showRanking, setShowRanking] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
   const gameBoardRef = useRef(null);
   const selectionBoxRef = useRef(null);
   const mouseIsDownRef = useRef(false); // 마우스 버튼 상태를 추적하는 ref
@@ -82,15 +80,15 @@ const ClassicMode = ({ onBack }) => {
     if (isSelecting) {
       handleMouseUp(e);
     }
-  };
-    // 초기화
+  };  // 초기화
   useEffect(() => {
     // 인증 상태 확인
-    setCurrentUser(AuthService.getCurrentUser());
+    const currentUser = AuthService.getCurrentUser();
     
     // 인증 상태 변경 리스너 등록
     const unsubscribe = AuthService.addListener((user) => {
-      setCurrentUser(user);
+      // 인증 상태 변경 시 필요한 처리가 있다면 여기에 추가
+      console.log('User authentication changed:', user);
     });
 
     initGame();
@@ -110,7 +108,7 @@ const ClassicMode = ({ onBack }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, []);
+  }, []); // 의존성 배열에서 함수들 제거
   const initGame = () => {
     setScore(0);    scoreRef.current = 0;
     setSelectedCells([]);
@@ -223,10 +221,8 @@ const ClassicMode = ({ onBack }) => {
       // 점수가 0인 경우
       alert(`게임 종료!\n점수: ${currentScore.toLocaleString()}점`);
     }
-  };
-  // 로그인 성공 처리
+  };  // 로그인 성공 처리
   const handleLoginSuccess = (user) => {
-    setCurrentUser(user);
     setShowLogin(false);
     console.log('로그인 성공:', user);
   };
@@ -234,8 +230,6 @@ const ClassicMode = ({ onBack }) => {
   // 로그인 모달 닫기
   const handleLoginClose = () => {
     setShowLogin(false);
-    // 최신 인증 상태 확인
-    setCurrentUser(AuthService.getCurrentUser());
   };
   
   // 마우스 다운 이벤트

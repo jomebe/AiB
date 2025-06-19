@@ -44,10 +44,8 @@ const GoldenAppleMode = ({ onBack }) => {
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedCells, setSelectedCells] = useState([]);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [gameOver, setGameOver] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
+  const [gameOver, setGameOver] = useState(false);  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
   const [applesRemoved, setApplesRemoved] = useState(0);
-  const [showRanking, setShowRanking] = useState(false);
   
   const gameBoardRef = useRef(null);
   const selectionBoxRef = useRef(null);
@@ -92,9 +90,7 @@ const GoldenAppleMode = ({ onBack }) => {
     e.preventDefault();
     return false;
   };
-
   const handleRankingClick = () => {
-    setShowRanking(true);
     console.log('랭킹 조회 요청');
   };
   
@@ -106,8 +102,7 @@ const GoldenAppleMode = ({ onBack }) => {
       handleMouseUp(e);
     }
   };
-  
-  // 초기화
+    // 초기화
   useEffect(() => {
     initGame();
     
@@ -117,12 +112,11 @@ const GoldenAppleMode = ({ onBack }) => {
     return () => {
       document.removeEventListener('mouseup', handleGlobalMouseUp);
       document.removeEventListener('contextmenu', preventContextMenu);
-      
-      if (timerRef.current) {
+        if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     };
-  }, []);
+  }, []); // 의존성 배열에서 함수들 제거
     const initGame = () => {
     setScore(0);
     setSelectedCells([]);
@@ -149,19 +143,8 @@ const GoldenAppleMode = ({ onBack }) => {
   };
     // 게임 보드 생성
   const generateBoard = () => {
-    const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
-      Array(BOARD_SIZE_X).fill(null)
+    const newBoard = Array(BOARD_SIZE_Y).fill().map(() =>      Array(BOARD_SIZE_X).fill(null)
     );
-    
-    // 전체 셀 수
-    const totalCells = BOARD_SIZE_X * BOARD_SIZE_Y; // 150개
-    
-    // 특수 사과 개수 설정
-    const specialApples = [
-      ...Array(5).fill({ type: APPLE_TYPES.GOLDEN, count: 5 }),   // 황금사과 5개
-      ...Array(5).fill({ type: APPLE_TYPES.RAINBOW, count: 5 }),  // 무지개사과 5개
-      ...Array(5).fill({ type: APPLE_TYPES.BLACK, count: 5 })     // 썩은사과 5개
-    ];
     
     // 모든 위치 배열 생성
     const positions = [];

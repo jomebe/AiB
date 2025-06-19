@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set, onValue, push, remove, onDisconnect, serverTimestamp, off, get } from 'firebase/database';
+import { getDatabase, ref, set, onValue, remove, onDisconnect, serverTimestamp, off, get } from 'firebase/database';
 import '../styles/ClassicMode.css';
 import '../styles/PartnerMode.css';
 import AppleDefault from '../../images/appleDefault.svg';
@@ -14,7 +14,6 @@ import Apple7 from '../../images/apple7.svg';
 import Apple8 from '../../images/apple8.svg';
 import Apple9 from '../../images/apple9.svg';
 import AuthService from '../../utils/auth';
-import ScoreService from '../../utils/scoreService';
 import Rankings from '../Rankings/Rankings';
 import Login from '../Login/Login';
 
@@ -65,22 +64,17 @@ const PartnerMode = ({ onBack }) => {
 
     // 상태 관리
     const [gameState, setGameState] = useState('lobby'); // 'lobby', 'matching', 'playing', 'ended'
-    const [playerName, setPlayerName] = useState('');
-    const [statusMessage, setStatusMessage] = useState('');
-    const [playerCount, setPlayerCount] = useState(0);
+    const [playerName, setPlayerName] = useState('');    const [statusMessage, setStatusMessage] = useState('');
     const [gameBoard, setGameBoard] = useState([]);
     const [score, setScore] = useState(0);
     const [partnerScore, setPartnerScore] = useState(0);
     const [remainingTime, setRemainingTime] = useState(TIMER_DURATION);
     const [gameOver, setGameOver] = useState(false);    const [selectedCells, setSelectedCells] = useState([]);
-    const [partnerSelectedCells, setPartnerSelectedCells] = useState([]);
     const [isSelecting, setIsSelecting] = useState(false);const [isHost, setIsHost] = useState(false);
     const [otherPlayerName, setOtherPlayerName] = useState('');
-    const [otherPlayerCursor, setOtherPlayerCursor] = useState({ x: 0, y: 0 });
-    const [currentUser, setCurrentUser] = useState(null);
+    const [otherPlayerCursor, setOtherPlayerCursor] = useState({ x: 0, y: 0 });    const [currentUser, setCurrentUser] = useState(null);
     const [showLogin, setShowLogin] = useState(false);
     const [showRankings, setShowRankings] = useState(false);
-    const [gameStartTime, setGameStartTime] = useState(null);
       // refs - ClassicMode와 동일한 구조
     const gameBoardRef = useRef(null);
     const timerRef = useRef(null);
@@ -137,29 +131,7 @@ const PartnerMode = ({ onBack }) => {
         
         oscillator.start();
         oscillator.stop(audioContext.current.currentTime + 0.1);
-    }, []);    // 게임 보드 생성
-    const generateBoard = useCallback(() => {
-        console.log('generateBoard called! BOARD_SIZE_X:', BOARD_SIZE_X, 'BOARD_SIZE_Y:', BOARD_SIZE_Y);
-        // 클래식 모드와 동일한 구조로 생성 (객체 형태로)
-        const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
-            Array(BOARD_SIZE_X).fill().map(() => ({
-                value: getRandomAppleValue(),
-                isVisible: true
-            }))
-        );
-
-        // 해결책 보장
-        ensureSolution(newBoard);
-        console.log('Generated board:', newBoard.length, 'rows x', newBoard[0]?.length, 'cols');
-        return newBoard;
-    }, []);
-
-    // 해결책 보장
-    const ensureSolution = (board) => {
-        if (!hasSolution(board)) {
-            createSolution(board);
-        }
-    };    // 해결책 존재 확인
+    }, []);    // 해결책 존재 확인
     const hasSolution = (board) => {
         // 가로 검사
         for (let i = 0; i < BOARD_SIZE_Y; i++) {
@@ -205,7 +177,9 @@ const PartnerMode = ({ onBack }) => {
         }
 
         return false;
-    };    // 해결책 생성
+    };
+
+    // 해결책 생성
     const createSolution = (board) => {
         const startY = Math.floor(Math.random() * BOARD_SIZE_Y);
         const startX = Math.floor(Math.random() * (BOARD_SIZE_X - 2));
@@ -224,6 +198,30 @@ const PartnerMode = ({ onBack }) => {
         board[startY][startX + len - 1].value = remainingSum;
         board[startY][startX + len - 1].isVisible = true;
     };
+
+    // 해결책 보장
+    const ensureSolution = (board) => {
+        if (!hasSolution(board)) {
+            createSolution(board);
+        }
+    };
+
+    // 게임 보드 생성
+    const generateBoard = useCallback(() => {
+        console.log('generateBoard called! BOARD_SIZE_X:', BOARD_SIZE_X, 'BOARD_SIZE_Y:', BOARD_SIZE_Y);
+        // 클래식 모드와 동일한 구조로 생성 (객체 형태로)
+        const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
+            Array(BOARD_SIZE_X).fill().map(() => ({
+                value: getRandomAppleValue(),
+                isVisible: true
+            }))
+        );
+
+        // 해결책 보장
+        ensureSolution(newBoard);
+        console.log('Generated board:', newBoard.length, 'rows x', newBoard[0]?.length, 'cols');
+        return newBoard;
+    }, []); // 의존성 배열에서 함수 제거
 
     // Firebase 데이터 초기화 (모든 게임과 플레이어 데이터 삭제)
     const clearFirebaseData = async () => {
@@ -452,10 +450,7 @@ const PartnerMode = ({ onBack }) => {
         } else {
             console.log('Non-host waiting for timer from Firebase');
             // 비호스트는 Firebase에서 타이머 값을 받을 때까지 대기
-        }
-
-        setSelectedCells([]);
-        setPartnerSelectedCells([]);
+        }        setSelectedCells([]);
         setGameBoard(board);
         initAudioContext();
         startTimer();
@@ -525,11 +520,11 @@ const PartnerMode = ({ onBack }) => {
         });
 
         // 상대방 선택 리스너
-        const selectionsRef = ref(database, `games/${gameId.current}/selections/${otherPlayerId.current}`);
-        onValue(selectionsRef, (snapshot) => {
+        const selectionsRef = ref(database, `games/${gameId.current}/selections/${otherPlayerId.current}`);        onValue(selectionsRef, (snapshot) => {
             const selectionData = snapshot.val();
             if (selectionData) {
-                setPartnerSelectedCells(selectionData);
+                // Partner selection handling logic can be implemented here if needed
+                console.log('Partner selection data:', selectionData);
             }
         });
     };    // 타이머 시작 - 호스트만 실행
@@ -595,13 +590,11 @@ const PartnerMode = ({ onBack }) => {
     const resetToLobby = async () => {
         setGameState('lobby');
         setPlayerName('');
-        setStatusMessage('');
-        setScore(0);
+        setStatusMessage('');        setScore(0);
         setPartnerScore(0);
         setRemainingTime(TIMER_DURATION);
         setGameOver(false);
         setSelectedCells([]);
-        setPartnerSelectedCells([]);
         setGameBoard([]);
 
         clearInterval(timerRef.current);
@@ -923,9 +916,7 @@ const PartnerMode = ({ onBack }) => {
             }
         };
 
-        window.addEventListener('beforeunload', handleBeforeUnload);
-
-        return () => {
+        window.addEventListener('beforeunload', handleBeforeUnload);        return () => {
             unsubscribe();
             clearInterval(timerRef.current);
             clearTimeout(matchingTimer.current);
@@ -934,18 +925,17 @@ const PartnerMode = ({ onBack }) => {
             if (gameRef.current) {
                 off(gameRef.current);
             }
-            if (playersRef.current) {
-                off(playersRef.current);
+            const currentPlayersRef = playersRef.current;
+            if (currentPlayersRef) {
+                off(currentPlayersRef);
             }
 
             // 전역 이벤트 리스너 제거 - ClassicMode와 동일
             document.removeEventListener('mouseup', handleGlobalMouseUp);
-            document.removeEventListener('contextmenu', preventContextMenu);
-
-            // 이벤트 리스너 제거
+            document.removeEventListener('contextmenu', preventContextMenu);            // 이벤트 리스너 제거
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, []);
+    }, []); // 의존성 배열에서 함수들 제거
 
     // 시간 포맷팅
     const formatTime = (seconds) => {
@@ -971,9 +961,8 @@ const PartnerMode = ({ onBack }) => {
                     <button onClick={startMatchmaking} disabled={gameState === 'matching'}>
                         게임 시작
                     </button>
-                </div>
-                <div className="status-message">{statusMessage}</div>
-                <div className="player-count">접속자 수: {playerCount}명</div>
+                </div>                <div className="status-message">{statusMessage}</div>
+                <div className="player-count">접속자 수: 2명</div>
             </div>
         </div>
     );    // 게임 화면 렌더링

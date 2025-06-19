@@ -8,23 +8,20 @@ import Apple3 from '../../images/apple3.svg';
 import Apple5 from '../../images/apple5.svg';
 import Apple7 from '../../images/apple7.svg';
 import Apple8 from '../../images/apple8.svg';
-import Apple9 from '../../images/apple9.svg';
 import GoldenApple from '../../images/goldenapple.svg';
 
 function Arcade({ onBack }) {
   const [selectedMode, setSelectedMode] = useState(null);
-  const [showRanking, setShowRanking] = useState(false);
 
   const handleModeSelect = (mode) => {
     setSelectedMode(mode);
   };
 
   const handleRankingClick = () => {
-    setShowRanking(true);
     // TODO: 랭킹 모달/페이지 표시 로직
     console.log('랭킹 조회 요청');
   };
-  
+
   // 드래그 방지 함수
   const preventDrag = (e) => {
     e.preventDefault();

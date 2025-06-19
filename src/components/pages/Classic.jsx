@@ -12,7 +12,6 @@ import Apple7 from '../../images/apple7.svg';
 
 function Classic({ onBack }) {
   const [selectedMode, setSelectedMode] = useState(null);
-  const [showRankings, setShowRankings] = useState(false);
 
   const handleClassicApple = () => {
     setSelectedMode('classic');
@@ -23,7 +22,8 @@ function Classic({ onBack }) {
   };
 
   const handleRankings = () => {
-    setShowRankings(true);
+    // TODO: 랭킹 모달/페이지 표시 로직
+    console.log('랭킹 조회 요청');
   };
 
   // 선택된 모드에 따라 컴포넌트 렌더링

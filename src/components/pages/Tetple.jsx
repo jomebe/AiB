@@ -30,9 +30,7 @@ const Tetple = ({ onBack }) => {
   const [level, setLevel] = useState(1);
   const [targetClears, setTargetClears] = useState(10);
   const [currentClears, setCurrentClears] = useState(0);
-  
-  const gameBoardRef = useRef(null);
-  const selectionBoxRef = useRef(null);
+    const gameBoardRef = useRef(null);
   const mouseIsDownRef = useRef(false);
   const timerRef = useRef(null);
   
@@ -278,17 +276,15 @@ const Tetple = ({ onBack }) => {
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
   }, []);
-
   // 컴포넌트 마운트 시 게임 시작
   useEffect(() => {
     startGame();
     
-    return () => {
-      if (timerRef.current) {
+    return () => {      if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     };
-  }, []);
+  }, []); // 의존성 배열에서 함수들 제거
 
   // 시간 포맷팅
   const formatTime = (seconds) => {

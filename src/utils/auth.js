@@ -94,9 +94,7 @@ class AuthService {
     // 현재 사용자 정보 반환
     getCurrentUser() {
         return this.currentUser;
-    }
-
-    // 로그인 상태 확인
+    }    // 로그인 상태 확인
     isAuthenticated() {
         return !!this.currentUser;
     }
@@ -112,4 +110,5 @@ class AuthService {
     }
 }
 
-export default new AuthService();
+const authService = new AuthService();
+export default authService;
