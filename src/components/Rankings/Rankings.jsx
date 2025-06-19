@@ -101,7 +101,7 @@ const Rankings = ({ isOpen, onClose, onBack, gameMode = 'classic' }) => {
         {/* 헤더 */}
         <div className="rankings-header">
           <div className="header-content">
-            <div className="trophy-icon">🏆</div>
+            {/* <div className="trophy-icon">🏆</div> */}
             <div className="header-text">
               <h2>리더보드</h2>
               <span className="mode-badge">{gameMode.toUpperCase()}</span>
