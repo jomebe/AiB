@@ -206,13 +206,9 @@ const ClassicMode = ({ onBack }) => {
         if (result.personalBest) {
           alert(`🎉 게임 종료!\n점수: ${currentScore.toLocaleString()}점\n🏆 개인 최고 기록 달성!\n순위: ${result.rank}위\n\n랭킹을 확인해보세요!`);
         } else {
-          alert(`게임 종료!\n점수: ${currentScore.toLocaleString()}점\n순위: ${result.rank}위\n\n랭킹에 기록되었습니다!\n랭킹을 확인해보세요!`);
-        }
+          alert(`게임 종료!\n점수: ${currentScore.toLocaleString()}점\n순위: ${result.rank}위\n\n랭킹에 기록되었습니다!\n랭킹을 확인해보세요!`);        }
         
-        // 게임 종료 후 자동으로 랭킹 표시
-        setTimeout(() => {
-          setShowRanking(true);
-        }, 500);
+        // 게임 종료 알림만 표시 (랭킹은 수동으로 확인)
         
       } catch (error) {
         console.error('점수 제출 실패:', error);
