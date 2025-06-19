@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, onValue, push, remove, onDisconnect, serverTimestamp, off, get } from 'firebase/database';
-import '../styles/PartnerMode.css';
+import '../styles/ClassicMode.css';
 import AppleDefault from '../../images/appleDefault.svg';
 import Apple1 from '../../images/apple1.svg';
 import Apple2 from '../../images/apple2.svg';
@@ -38,13 +38,12 @@ try {
 
 const PartnerMode = ({ onBack }) => {
     console.log('PartnerMode component loaded'); // 디버깅용
-    
-    // 게임 설정
-    const BOARD_SIZE_X = 34;
-    const BOARD_SIZE_Y = 20;
+      // 게임 설정 - ClassicMode와 동일하게
+    const BOARD_SIZE_X = 15; // 가로 칸 수 (ClassicMode와 동일)
+    const BOARD_SIZE_Y = 10; // 세로 칸 수 (ClassicMode와 동일)
     const TARGET_SUM = 10;
     const MAX_APPLE_VALUE = 9;
-    const TIMER_DURATION = 120; // 2분
+    const TIMER_DURATION = 120; // 2분 (ClassicMode와 동일)
     const MATCHING_TIMEOUT = 15000; // 15초 매칭 타임아웃
 
     // 숫자별 사과 이미지 매핑
