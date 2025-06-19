@@ -21,8 +21,8 @@ const TimeAttackMode = ({ onBack }) => {
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
-  const [applesRemoved, setApplesRemoved] = useState(0);
-  const [noMoreMoves, setNoMoreMoves] = useState(false);
+  const [applesRemoved, setApplesRemoved] = useState(0);  const [noMoreMoves, setNoMoreMoves] = useState(false);
+  const [showNoMovesPopup, setShowNoMovesPopup] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedCells, setSelectedCells] = useState([]);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
@@ -61,13 +61,13 @@ const TimeAttackMode = ({ onBack }) => {
       }
       board.push(row);
     }
-    setGameBoard(board);
-    
-    // 초기 보드에서 가능한 움직임 체크
+    setGameBoard(board);    // 초기 보드에서 가능한 움직임 체크
     setTimeout(() => {
+      console.log('🎯 초기 보드 체크');
       checkForPossibleMoves(board);
     }, 100);
   }, []);
+
   // 게임 시작
   const startGame = useCallback(() => {
     setGameOver(false);
@@ -75,6 +75,7 @@ const TimeAttackMode = ({ onBack }) => {
     setTimeLeft(GAME_TIME);
     setApplesRemoved(0);
     setNoMoreMoves(false);
+    setShowNoMovesPopup(false);
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -93,15 +94,17 @@ const TimeAttackMode = ({ onBack }) => {
         return prev - 1;
       });
     }, 1000);
-    
-    timerRef.current = timer;
-  }, []); // initializeBoard 의존성 제거
-
+      timerRef.current = timer;
+  }, [initializeBoard]); // initializeBoard 의존성 추가
   // 10을 만들 수 있는 조합이 있는지 체크
   const checkForPossibleMoves = (board = gameBoard) => {
     if (board.length === 0) return;
     
+    console.log('=== 보드 체크 시작 ===');
+    console.log('현재 보드:', board.map(row => row.map(cell => cell.value)));
+    
     let hasValidMoves = false;
+    const validCombinations = [];
     
     // 2개 조합 체크
     for (let y1 = 0; y1 < BOARD_SIZE; y1++) {
@@ -109,9 +112,17 @@ const TimeAttackMode = ({ onBack }) => {
         for (let y2 = 0; y2 < BOARD_SIZE; y2++) {
           for (let x2 = 0; x2 < BOARD_SIZE; x2++) {
             if (x1 !== x2 || y1 !== y2) {
-              if (board[y1][x1].value + board[y2][x2].value === TARGET_SUM) {
+              const value1 = board[y1][x1].value;
+              const value2 = board[y2][x2].value;
+              const sum = value1 + value2;
+              
+              if (sum === TARGET_SUM) {
                 hasValidMoves = true;
-                break;
+                validCombinations.push({
+                  pos1: `(${x1},${y1})`,
+                  pos2: `(${x2},${y2})`,
+                  values: `${value1}+${value2}=${sum}`
+                });
               }
             }
           }
@@ -122,14 +133,40 @@ const TimeAttackMode = ({ onBack }) => {
       if (hasValidMoves) break;
     }
     
+    console.log('찾은 유효한 조합들:', validCombinations);
+    console.log('유효한 움직임 있음:', hasValidMoves);
+    
     if (!hasValidMoves) {
+      console.log('❌ 더 이상 움직일 수 없습니다! 팝업을 띄웁니다.');
       setNoMoreMoves(true);
-      setGameOver(true);
+      setShowNoMovesPopup(true);
     }
-  };
-  // 게임 재시작
+  };// 게임 재시작
   const restartGame = () => {
     startGame();
+  };
+  // 팝업 닫기
+  const closeNoMovesPopup = () => {
+    setShowNoMovesPopup(false);
+    setNoMoreMoves(false);
+    
+    // 새로운 보드 생성
+    setGameBoard(prevBoard => {
+      const newBoard = prevBoard.map(row => 
+        row.map(cell => ({
+          ...cell,
+          value: Math.floor(Math.random() * 9) + 1,
+          selected: false
+        }))
+      );
+        // 새 보드에서 가능한 움직임 체크
+      setTimeout(() => {
+        console.log('🔄 팝업 닫은 후 새 보드 체크');
+        checkForPossibleMoves(newBoard);
+      }, 100);
+      
+      return newBoard;
+    });
   };
 
   // 전역 마우스 업 이벤트 핸들러
@@ -307,9 +344,9 @@ const TimeAttackMode = ({ onBack }) => {
             cellElement.classList.remove('apple-explode');
           }
         });
-        
-        // 새 보드에서 가능한 움직임 체크
+          // 새 보드에서 가능한 움직임 체크
         setTimeout(() => {
+          console.log('🍎 사과 제거 후 보드 체크');
           checkForPossibleMoves();
         }, 100);
         
