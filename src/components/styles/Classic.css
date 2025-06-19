@@ -23,6 +23,10 @@
   margin-bottom: 40px;
 }
 
+.main-title {
+  color: #ffffff;
+}
+
 .back-button {
   border: none;
   border-radius: 12px;

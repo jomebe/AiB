@@ -37,6 +37,7 @@ function Classic({ onBack }) {
 
   const renderModeSelection = () => {
     return (
+      <>
       <div className="mode-selection-container">        <div className="mode-card" onClick={handleClassicApple}>
           <div className="apple-grid classic-grid">
             <div className="apple-item"><img src={Apple3} alt="3" /></div>
@@ -64,6 +65,10 @@ function Classic({ onBack }) {
           <div className="mode-title">Time Attack</div>
         </div>
       </div>
+      <button onClick={onBack} className="back-button">
+        돌아가기
+      </button>
+      </>
     );
   };
 

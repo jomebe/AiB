@@ -355,7 +355,7 @@ const AppleAllClear = ({ onBack }) => {
             ></div>
           </div>
           
-          <div className="apple-score-container">
+          <div className="apple-score-container2">
             <img src={AppleSVG} alt="Apple" className="apple-icon" />
             <span className="apple-count">{score}</span>
           </div>
@@ -407,43 +407,6 @@ const AppleAllClear = ({ onBack }) => {
           })
         )).flat()}
       </div>
-        {gameOver && (
-        <div className="game-over-overlay">
-          <div className="game-over-modal">
-            <div className="game-over-header">
-              <div className="game-over-icon">{allClear ? '🎉' : '🎯'}</div>
-              <h2 className="game-over-title">
-                {allClear ? 'All Clear!' : '게임 완료!'}
-              </h2>
-              {allClear && (
-                <p className="game-over-subtitle">모든 사과를 제거했습니다!</p>
-              )}
-            </div>
-            
-            <div className="game-over-stats">
-              <div className="stat-item">
-                <div className="stat-value">{score.toLocaleString()}</div>
-                <div className="stat-label">최종 점수</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value">{applesRemoved}</div>
-                <div className="stat-label">제거한 사과</div>
-              </div>
-            </div>
-            
-            <div className="game-over-actions">
-              <button onClick={initGame} className="primary-button">
-                <span className="button-icon">🔄</span>
-                다시 시작
-              </button>
-              <button onClick={onBack} className="secondary-button">
-                <span className="button-icon">🏠</span>
-                메인으로
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
         {/* 랭킹 버튼 */}
       <button className="ranking-button" onClick={handleRankingClick}>
         <span className="trophy-icon">🏆</span>
@@ -463,6 +426,9 @@ const AppleAllClear = ({ onBack }) => {
           </div>
         </div>
       )}
+      <button onClick={onBack} className="back-button">
+            돌아가기
+          </button>
     </div>
   );
 };
