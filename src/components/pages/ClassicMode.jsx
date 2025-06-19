@@ -72,15 +72,14 @@ const ClassicMode = ({ onBack }) => {
   const handleCloseRanking = () => {
     setShowRanking(false);
   };
-  
-  // 전역 마우스 업 이벤트 핸들러
-  const handleGlobalMouseUp = (e) => {
+    // 전역 마우스 업 이벤트 핸들러
+  const handleGlobalMouseUp = useCallback((e) => {
     mouseIsDownRef.current = false;
     
     if (isSelecting) {
       handleMouseUp(e);
     }
-  };  // 초기화
+  }, [isSelecting]); // handleMouseUp 의존성도 추가해야 할 수 있음// 초기화
   useEffect(() => {
     // 인증 상태 확인
     const currentUser = AuthService.getCurrentUser();
@@ -108,8 +107,9 @@ const ClassicMode = ({ onBack }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, []); // 의존성 배열에서 함수들 제거
-  const initGame = () => {
+  }, [handleGlobalMouseUp, initGame]); // 의존성 배열에 함수들 추가
+
+  const initGame = useCallback(() => {
     setScore(0);    scoreRef.current = 0;
     setSelectedCells([]);
     setGameOver(false);
@@ -134,9 +134,8 @@ const ClassicMode = ({ onBack }) => {
         return prevTime - 1;
       });
     }, 1000);
-    
-    generateBoard();
-  };
+      generateBoard();
+  }, []); // useCallback 의존성 배열
   
   // 랜덤 숫자 생성 (1~9)
   const getRandomAppleValue = () => {

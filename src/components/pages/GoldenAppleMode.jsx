@@ -93,15 +93,14 @@ const GoldenAppleMode = ({ onBack }) => {
   const handleRankingClick = () => {
     console.log('랭킹 조회 요청');
   };
-  
-  // 전역 마우스 업 이벤트 핸들러
-  const handleGlobalMouseUp = (e) => {
+    // 전역 마우스 업 이벤트 핸들러
+  const handleGlobalMouseUp = useCallback((e) => {
     mouseIsDownRef.current = false;
     
     if (isSelecting) {
       handleMouseUp(e);
     }
-  };
+  }, [isSelecting]);
     // 초기화
   useEffect(() => {
     initGame();
@@ -115,9 +114,8 @@ const GoldenAppleMode = ({ onBack }) => {
         if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-    };
-  }, []); // 의존성 배열에서 함수들 제거
-    const initGame = () => {
+    };  }, [handleGlobalMouseUp, initGame]); // 의존성 배열에 함수들 추가
+    const initGame = useCallback(() => {
     setScore(0);
     setSelectedCells([]);
     setGameOver(false);
@@ -138,9 +136,8 @@ const GoldenAppleMode = ({ onBack }) => {
         return prevTime - 1;
       });
     }, 1000);
-    
-    generateBoard();
-  };
+      generateBoard();
+  }, []); // useCallback 의존성 배열
     // 게임 보드 생성
   const generateBoard = () => {
     const newBoard = Array(BOARD_SIZE_Y).fill().map(() =>      Array(BOARD_SIZE_X).fill(null)

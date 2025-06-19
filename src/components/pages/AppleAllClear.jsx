@@ -63,15 +63,14 @@ const AppleAllClear = ({ onBack }) => {
     // TODO: 랭킹 모달/페이지 표시 로직
     console.log('랭킹 조회 요청');
   };
-  
-  // 전역 마우스 업 이벤트 핸들러
-  const handleGlobalMouseUp = (e) => {
+    // 전역 마우스 업 이벤트 핸들러
+  const handleGlobalMouseUp = useCallback((e) => {
     mouseIsDownRef.current = false;
     
     if (isSelecting) {
       handleMouseUp(e);
     }
-  };
+  }, [isSelecting]);
     // 초기화
   useEffect(() => {
     initGame();
@@ -88,10 +87,9 @@ const AppleAllClear = ({ onBack }) => {
       // 타이머 정리
       if (timerRef.current) {        clearInterval(timerRef.current);
       }
-    };
-  }, []); // 의존성 배열에서 함수들 제거
-  
-  const initGame = () => {
+    };  }, [handleGlobalMouseUp, initGame]); // 의존성 배열에 함수들 추가
+
+  const initGame = useCallback(() => {
     setScore(0);
     setSelectedCells([]);
     setGameOver(false);
@@ -115,9 +113,8 @@ const AppleAllClear = ({ onBack }) => {
         return prevTime - 1;
       });
     }, 1000);
-    
-    generateBoard();
-  };
+      generateBoard();
+  }, []); // useCallback 의존성 배열
   
   // 랜덤 숫자 생성 (1~9)
   const getRandomAppleValue = () => {

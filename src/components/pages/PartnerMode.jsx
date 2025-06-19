@@ -664,13 +664,13 @@ const PartnerMode = ({ onBack }) => {
             console.error('게임에서 플레이어 제거 오류:', error);
         }
     };    // 전역 마우스 업 이벤트 핸들러 - ClassicMode와 동일
-    const handleGlobalMouseUp = (e) => {
+    const handleGlobalMouseUp = useCallback((e) => {
         mouseIsDownRef.current = false;
         
         if (isSelecting) {
             handleMouseUp(e);
         }
-    };
+    }, [isSelecting]);
 
     // 마우스 이벤트 핸들러 - ClassicMode와 동일
     const handleMouseDown = (e) => {
@@ -935,7 +935,7 @@ const PartnerMode = ({ onBack }) => {
             document.removeEventListener('contextmenu', preventContextMenu);            // 이벤트 리스너 제거
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, []); // 의존성 배열에서 함수들 제거
+    }, [handleGlobalMouseUp]); // 의존성 배열에 함수들 추가
 
     // 시간 포맷팅
     const formatTime = (seconds) => {
