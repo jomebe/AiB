@@ -284,7 +284,7 @@ const Tetple = ({ onBack }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, []); // 의존성 배열에서 함수들 제거
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 시간 포맷팅
   const formatTime = (seconds) => {

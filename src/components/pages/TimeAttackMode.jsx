@@ -141,7 +141,7 @@ const TimeAttackMode = ({ onBack }) => {
         clearTimeout(timerRef.current);
       }
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="classic-container">

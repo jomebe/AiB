@@ -919,13 +919,11 @@ const PartnerMode = ({ onBack }) => {
         window.addEventListener('beforeunload', handleBeforeUnload);        return () => {
             unsubscribe();
             clearInterval(timerRef.current);
-            clearTimeout(matchingTimer.current);
-
-            // Firebase 리스너 정리
+            clearTimeout(matchingTimer.current);            // Firebase 리스너 정리
             if (gameRef.current) {
                 off(gameRef.current);
             }
-            const currentPlayersRef = playersRef.current;
+            const currentPlayersRef = playersRef.current; // eslint-disable-line react-hooks/exhaustive-deps
             if (currentPlayersRef) {
                 off(currentPlayersRef);
             }

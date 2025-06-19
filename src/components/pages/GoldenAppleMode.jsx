@@ -101,8 +101,9 @@ const GoldenAppleMode = ({ onBack }) => {
       handleMouseUp(e);
     }
   }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
-    // 초기화
+  // 초기화
   useEffect(() => {
+    // eslint-disable-next-line no-use-before-define
     initGame();
     
     document.addEventListener('mouseup', handleGlobalMouseUp);
@@ -114,7 +115,7 @@ const GoldenAppleMode = ({ onBack }) => {
         if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-    };  }, [handleGlobalMouseUp, initGame]); // eslint-disable-line react-hooks/exhaustive-deps
+    };  }, [handleGlobalMouseUp]); // eslint-disable-line react-hooks/exhaustive-deps
     const initGame = useCallback(() => {
     setScore(0);
     setSelectedCells([]);

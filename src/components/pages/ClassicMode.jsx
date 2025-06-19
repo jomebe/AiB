@@ -88,10 +88,10 @@ const ClassicMode = ({ onBack }) => {
     // 인증 상태 변경 리스너 등록
     const unsubscribe = AuthService.addListener((user) => {
       // 인증 상태 변경 시 필요한 처리가 있다면 여기에 추가
-      console.log('User authentication changed:', user);
-    });
+      console.log('User authentication changed:', user);    });
 
-    initGame(); // eslint-disable-line no-use-before-define
+    // eslint-disable-next-line no-use-before-define
+    initGame();
     
     // 전역 이벤트 리스너 추가
     document.addEventListener('mouseup', handleGlobalMouseUp);
@@ -108,7 +108,7 @@ const ClassicMode = ({ onBack }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, [handleGlobalMouseUp, initGame]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [handleGlobalMouseUp]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initGame = useCallback(() => {
     setScore(0);    scoreRef.current = 0;

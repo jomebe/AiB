@@ -71,9 +71,10 @@ const AppleAllClear = ({ onBack }) => {
       handleMouseUp(e);
     }
   }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
-    // 초기화
+  // 초기화
   useEffect(() => {
-    initGame(); // eslint-disable-line no-use-before-define
+    // eslint-disable-next-line no-use-before-define
+    initGame();
     
     // 전역 이벤트 리스너 추가
     document.addEventListener('mouseup', handleGlobalMouseUp);
@@ -87,7 +88,7 @@ const AppleAllClear = ({ onBack }) => {
       // 타이머 정리
       if (timerRef.current) {        clearInterval(timerRef.current);
       }
-    };  }, [handleGlobalMouseUp, initGame]); // eslint-disable-line react-hooks/exhaustive-deps
+    };  }, [handleGlobalMouseUp]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initGame = useCallback(() => {
     setScore(0);
