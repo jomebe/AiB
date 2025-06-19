@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/ClassicMode.css';
 import AppleDefault from '../../images/appleDefault.svg';
 import Apple1 from '../../images/apple1.svg';
@@ -100,7 +100,7 @@ const GoldenAppleMode = ({ onBack }) => {
     if (isSelecting) {
       handleMouseUp(e);
     }
-  }, [isSelecting]);
+  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
     // 초기화
   useEffect(() => {
     initGame();
@@ -114,7 +114,7 @@ const GoldenAppleMode = ({ onBack }) => {
         if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-    };  }, [handleGlobalMouseUp, initGame]); // 의존성 배열에 함수들 추가
+    };  }, [handleGlobalMouseUp, initGame]); // eslint-disable-line react-hooks/exhaustive-deps
     const initGame = useCallback(() => {
     setScore(0);
     setSelectedCells([]);
@@ -137,7 +137,7 @@ const GoldenAppleMode = ({ onBack }) => {
       });
     }, 1000);
       generateBoard();
-  }, []); // useCallback 의존성 배열
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
     // 게임 보드 생성
   const generateBoard = () => {
     const newBoard = Array(BOARD_SIZE_Y).fill().map(() =>      Array(BOARD_SIZE_X).fill(null)

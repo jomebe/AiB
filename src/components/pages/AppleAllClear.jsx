@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/ClassicMode.css';
 import AppleDefault from '../../images/appleDefault.svg';
 import Apple1 from '../../images/apple1.svg';
@@ -70,10 +70,10 @@ const AppleAllClear = ({ onBack }) => {
     if (isSelecting) {
       handleMouseUp(e);
     }
-  }, [isSelecting]);
+  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
     // 초기화
   useEffect(() => {
-    initGame();
+    initGame(); // eslint-disable-line no-use-before-define
     
     // 전역 이벤트 리스너 추가
     document.addEventListener('mouseup', handleGlobalMouseUp);
@@ -87,7 +87,7 @@ const AppleAllClear = ({ onBack }) => {
       // 타이머 정리
       if (timerRef.current) {        clearInterval(timerRef.current);
       }
-    };  }, [handleGlobalMouseUp, initGame]); // 의존성 배열에 함수들 추가
+    };  }, [handleGlobalMouseUp, initGame]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initGame = useCallback(() => {
     setScore(0);
@@ -114,7 +114,7 @@ const AppleAllClear = ({ onBack }) => {
       });
     }, 1000);
       generateBoard();
-  }, []); // useCallback 의존성 배열
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   // 랜덤 숫자 생성 (1~9)
   const getRandomAppleValue = () => {

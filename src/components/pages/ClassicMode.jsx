@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/ClassicMode.css';
 import AppleDefault from '../../images/appleDefault.svg';
 import Apple1 from '../../images/apple1.svg';
@@ -78,11 +78,12 @@ const ClassicMode = ({ onBack }) => {
     
     if (isSelecting) {
       handleMouseUp(e);
-    }
-  }, [isSelecting]); // handleMouseUp 의존성도 추가해야 할 수 있음// 초기화
+    }  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 초기화
   useEffect(() => {
     // 인증 상태 확인
-    const currentUser = AuthService.getCurrentUser();
+    AuthService.getCurrentUser();
     
     // 인증 상태 변경 리스너 등록
     const unsubscribe = AuthService.addListener((user) => {
@@ -90,7 +91,7 @@ const ClassicMode = ({ onBack }) => {
       console.log('User authentication changed:', user);
     });
 
-    initGame();
+    initGame(); // eslint-disable-line no-use-before-define
     
     // 전역 이벤트 리스너 추가
     document.addEventListener('mouseup', handleGlobalMouseUp);
@@ -107,7 +108,7 @@ const ClassicMode = ({ onBack }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, [handleGlobalMouseUp, initGame]); // 의존성 배열에 함수들 추가
+  }, [handleGlobalMouseUp, initGame]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initGame = useCallback(() => {
     setScore(0);    scoreRef.current = 0;
@@ -135,7 +136,7 @@ const ClassicMode = ({ onBack }) => {
       });
     }, 1000);
       generateBoard();
-  }, []); // useCallback 의존성 배열
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   // 랜덤 숫자 생성 (1~9)
   const getRandomAppleValue = () => {

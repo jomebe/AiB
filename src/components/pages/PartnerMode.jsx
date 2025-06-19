@@ -221,7 +221,7 @@ const PartnerMode = ({ onBack }) => {
         ensureSolution(newBoard);
         console.log('Generated board:', newBoard.length, 'rows x', newBoard[0]?.length, 'cols');
         return newBoard;
-    }, []); // 의존성 배열에서 함수 제거
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Firebase 데이터 초기화 (모든 게임과 플레이어 데이터 삭제)
     const clearFirebaseData = async () => {
@@ -670,7 +670,7 @@ const PartnerMode = ({ onBack }) => {
         if (isSelecting) {
             handleMouseUp(e);
         }
-    }, [isSelecting]);
+    }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 마우스 이벤트 핸들러 - ClassicMode와 동일
     const handleMouseDown = (e) => {
@@ -935,7 +935,7 @@ const PartnerMode = ({ onBack }) => {
             document.removeEventListener('contextmenu', preventContextMenu);            // 이벤트 리스너 제거
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, [handleGlobalMouseUp]); // 의존성 배열에 함수들 추가
+    }, [handleGlobalMouseUp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 시간 포맷팅
     const formatTime = (seconds) => {

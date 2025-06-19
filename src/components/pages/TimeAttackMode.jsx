@@ -17,20 +17,15 @@ const TimeAttackMode = ({ onBack }) => {
   const BOARD_SIZE = 4; // 4x4 격자
   const TARGET_SUM = 10;
   const GAME_TIME = 60; // 1분 (초 단위)
-
   // 게임 상태
   const [gameBoard, setGameBoard] = useState([]);
   const [score, setScore] = useState(0);
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [selectedCells, setSelectedCells] = useState([]);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [gameOver, setGameOver] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
   const [applesRemoved, setApplesRemoved] = useState(0);
   const [noMoreMoves, setNoMoreMoves] = useState(false);
   
   const gameBoardRef = useRef(null);
-  const mouseIsDownRef = useRef(false);
   const timerRef = useRef(null);
   
   // 숫자별 사과 이미지 매핑
