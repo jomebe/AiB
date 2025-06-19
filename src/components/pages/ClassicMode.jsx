@@ -431,13 +431,10 @@ const ClassicMode = ({ onBack }) => {
   };
 
   return (
-    <div className="classic-mode-container">
+    <div className="classic-mode-container classic-mode-container2">
       <div className="game-header">
         <div className="header-content">
           <div className="header-left">
-            <button onClick={onBack} className="back-button">
-              ← 돌아가기
-            </button>
             <h1 className="game-title">Classic Apple</h1>
           </div>
             <div className="header-center">
@@ -537,6 +534,9 @@ const ClassicMode = ({ onBack }) => {
           </div>
         </div>
       )}
+      <button onClick={onBack} className="back-button">
+        돌아가기
+      </button>
         {/* 랭킹 버튼 */}
       <button className="ranking-button" onClick={handleRankingClick}>
         <span className="trophy-icon">🏆</span>

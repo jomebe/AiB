@@ -118,7 +118,7 @@ html, body {
 .progress-container {
   flex: 1;
   height: 24px;
-  background-color: #F2FDEF;
+  background-color: #daf3d4;
   border-radius: 12px;
   overflow: hidden;
   position: relative;
@@ -305,12 +305,12 @@ html, body {
 }
 
 .back-button {
-  background-color: #e0f0e3 !important;
+  background-color: #F2FDEF !important;
   color: #000000 !important;
 }
 
 .back-button:hover {
-  background-color: #c0e0c3 !important;
+  background-color: #F2FDEF !important;
 }
 
 .game-over-overlay {

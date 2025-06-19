@@ -12,6 +12,10 @@
   -ms-user-select: none;
 }
 
+.classic-mode-container2 {
+  margin-top: 50px;
+}
+
 .game-header {
   display: flex;
   justify-content: space-between;
@@ -345,13 +349,6 @@
   background-color: #E0EDDF;
 }
 
-.back-button {
-  background-color: #FFE7E7 !important;
-}
-
-.back-button:hover {
-  background-color: #FFCCCC !important;
-} 
 
 /* 랭킹 버튼 스타일 */
 .ranking-button {
