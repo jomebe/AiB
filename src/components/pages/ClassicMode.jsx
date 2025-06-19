@@ -549,13 +549,13 @@ const ClassicMode = ({ onBack }) => {
         />
       )}      {/* 랭킹 팝업 모달 */}
       {showRanking && (
-        <div className="ranking-modal-overlay">
-          <div className="ranking-modal-content">
-            <div className="ranking-modal-header">
-              <h2>🏆 랭킹</h2>
-              <button onClick={handleCloseRanking} className="close-button">
+        <div>
+          <div>
+            <div>
+              {/* <h2>🏆 랭킹</h2> */}
+              {/* <button onClick={handleCloseRanking} className="close-button">
                 ×
-              </button>
+              </button> */}
             </div>
             <Rankings onBack={handleCloseRanking} isModal={true} isOpen={showRanking} gameMode="classic" />
           </div>
