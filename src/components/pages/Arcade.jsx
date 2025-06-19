@@ -95,10 +95,11 @@ function Arcade({ onBack }) {
 
   return (
     <div 
-      className="arcade-container"
+      className="classic-container2"
       onContextMenu={(e) => e.preventDefault()}
-    >
-      <div className="game-container">
+    > 
+    <div className="classic-container2">
+      <div className="game-container2">
         {renderGameContent()}
       </div>
       <div className="button-container">
@@ -109,7 +110,7 @@ function Arcade({ onBack }) {
         )}
         <button className="back-button" onClick={onBack}>메인으로 돌아가기</button>
       </div>
-      
+    </div>  
       {/* 랭킹 버튼 */}
       {!selectedMode && (
         <button className="ranking-button" onClick={handleRankingClick}>

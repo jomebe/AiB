@@ -78,8 +78,8 @@ function Classic({ onBack }) {
     }
   };
   return (
-    <div className="classic-container">
-      <div className="game-container">
+    <div className="classic-container2">
+      <div className="game-container2">
         {renderGameContent()}
       </div>
       <div className="button-container">
