@@ -353,7 +353,8 @@ const TimeAttackMode = ({ onBack }) => {
         width: '100%', 
         maxWidth: '800px',
         marginBottom: '30px',
-        padding: '0 20px'
+        padding: '0 20px',
+        backgroundcolor: ''
       }}>
         <h2 style={{ 
           fontSize: '32px', 
