@@ -449,8 +449,9 @@ const ClassicMode = ({ onBack }) => {
           <div className="header-right">
             {AuthService.isAuthenticated() ? (
               <div className="user-info">
-                <span className="player-name">{AuthService.getPlayerName()}</span>
-                <div className="score-display">점수: {score}</div>
+                {/* <span className="player-name">{AuthService.getPlayerName()}</span> */}
+                <div className="score-display1">
+                  <img src={AppleDefault} width='20px'/><div>{score}</div></div>
               </div>
             ) : (
               <button onClick={() => setShowLogin(true)} className="login-btn">
