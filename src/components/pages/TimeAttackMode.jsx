@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/ClassicMode.css';
 import AppleDefault from '../../images/appleDefault.svg';
 import Apple1 from '../../images/apple1.svg';
@@ -16,17 +16,21 @@ const TimeAttackMode = ({ onBack }) => {
   // 게임 설정
   const BOARD_SIZE = 4; // 4x4 격자
   const TARGET_SUM = 10;
-  const GAME_TIME = 60; // 1분 (초 단위)
-  // 게임 상태
+  const GAME_TIME = 60; // 1분 (초 단위)  // 게임 상태
   const [gameBoard, setGameBoard] = useState([]);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
   const [applesRemoved, setApplesRemoved] = useState(0);
   const [noMoreMoves, setNoMoreMoves] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectedCells, setSelectedCells] = useState([]);
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   
   const gameBoardRef = useRef(null);
   const timerRef = useRef(null);
+  const selectionBoxRef = useRef(null);
+  const mouseIsDownRef = useRef(false);
   
   // 숫자별 사과 이미지 매핑
   const appleImages = {
@@ -41,9 +45,8 @@ const TimeAttackMode = ({ onBack }) => {
     9: Apple9,
     default: AppleDefault
   };
-
   // 게임 보드 초기화
-  const initializeBoard = () => {
+  const initializeBoard = useCallback(() => {
     const board = [];
     for (let y = 0; y < BOARD_SIZE; y++) {
       const row = [];
@@ -64,15 +67,19 @@ const TimeAttackMode = ({ onBack }) => {
     setTimeout(() => {
       checkForPossibleMoves(board);
     }, 100);
-  };
-
+  }, []);
   // 게임 시작
-  const startGame = () => {
+  const startGame = useCallback(() => {
     setGameOver(false);
     setScore(0);
     setTimeLeft(GAME_TIME);
     setApplesRemoved(0);
     setNoMoreMoves(false);
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
     initializeBoard();
     
     // 타이머 시작
@@ -88,7 +95,7 @@ const TimeAttackMode = ({ onBack }) => {
     }, 1000);
     
     timerRef.current = timer;
-  };
+  }, []); // initializeBoard 의존성 제거
 
   // 10을 만들 수 있는 조합이 있는지 체크
   const checkForPossibleMoves = (board = gameBoard) => {
@@ -120,28 +127,219 @@ const TimeAttackMode = ({ onBack }) => {
       setGameOver(true);
     }
   };
-
   // 게임 재시작
   const restartGame = () => {
     startGame();
   };
 
-  // 타이머 이펙트
-  useEffect(() => {
-    if (timeLeft === 0 && !gameOver) {
-      setGameOver(true);
+  // 전역 마우스 업 이벤트 핸들러
+  const handleGlobalMouseUp = useCallback(() => {
+    if (mouseIsDownRef.current) {
+      cleanupSelection();
     }
-  }, [timeLeft, gameOver]);
-
-  // 컴포넌트 마운트 시 보드 초기화
+  }, []);
+  // 컴포넌트 마운트 시 게임 시작
   useEffect(() => {
-    initializeBoard();
+    startGame();
+    
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    document.addEventListener('contextmenu', preventContextMenu);
+    
     return () => {
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('contextmenu', preventContextMenu);
       if (timerRef.current) {
-        clearTimeout(timerRef.current);
+        clearInterval(timerRef.current);
       }
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // 빈 배열로 변경 - 컴포넌트 마운트시에만 실행
+
+  // 선택 상자 생성
+  const createSelectionBox = (x, y) => {
+    const existingBox = document.querySelector('.selection-box');
+    if (existingBox) {
+      existingBox.remove();
+    }
+
+    const selectionBox = document.createElement('div');
+    selectionBox.className = 'selection-box';
+    selectionBox.style.position = 'absolute';
+    selectionBox.style.left = `${x}px`;
+    selectionBox.style.top = `${y}px`;
+    selectionBox.style.width = '0px';
+    selectionBox.style.height = '0px';
+    selectionBox.style.border = '2px dashed #66BE6E';
+    selectionBox.style.backgroundColor = 'rgba(102, 190, 110, 0.1)';
+    selectionBox.style.pointerEvents = 'none';
+    selectionBox.style.zIndex = '10';
+
+    if (gameBoardRef.current) {
+      gameBoardRef.current.appendChild(selectionBox);
+      selectionBoxRef.current = selectionBox;
+    }
+  };
+
+  // 선택 상자 업데이트
+  const updateSelectionBox = (startX, startY, endX, endY) => {
+    if (!selectionBoxRef.current) return;
+
+    const left = Math.min(startX, endX);
+    const top = Math.min(startY, endY);
+    const width = Math.abs(endX - startX);
+    const height = Math.abs(endY - startY);
+
+    selectionBoxRef.current.style.left = `${left}px`;
+    selectionBoxRef.current.style.top = `${top}px`;
+    selectionBoxRef.current.style.width = `${width}px`;
+    selectionBoxRef.current.style.height = `${height}px`;
+  };
+  // 마우스 다운 이벤트
+  const handleMouseDown = (e) => {
+    console.log('handleMouseDown called, button:', e.button, 'gameOver:', gameOver);
+    if (e.button === 2 || gameOver) return;
+    
+    mouseIsDownRef.current = true;
+    
+    const boardRect = gameBoardRef.current.getBoundingClientRect();
+    const x = e.clientX - boardRect.left;
+    const y = e.clientY - boardRect.top;
+    
+    console.log('Setting isSelecting to true, startPos:', { x, y });
+    setIsSelecting(true);
+    setSelectedCells([]);
+    setStartPos({ x, y });
+    
+    createSelectionBox(x, y);
+  };
+
+  // 마우스 이동 이벤트
+  const handleMouseMove = (e) => {
+    if (!isSelecting || !mouseIsDownRef.current) return;
+    
+    const boardRect = gameBoardRef.current.getBoundingClientRect();
+    const x = e.clientX - boardRect.left;
+    const y = e.clientY - boardRect.top;
+    
+    updateSelectionBox(startPos.x, startPos.y, x, y);
+    
+    // 선택된 셀들 찾기
+    const cells = document.querySelectorAll('[data-cell-id]');
+    const selectedCellsData = [];
+    
+    const selectionLeft = Math.min(startPos.x, x);
+    const selectionTop = Math.min(startPos.y, y);
+    const selectionRight = Math.max(startPos.x, x);
+    const selectionBottom = Math.max(startPos.y, y);
+      cells.forEach(cell => {
+      const cellRect = cell.getBoundingClientRect();
+      const boardRect = gameBoardRef.current.getBoundingClientRect();
+      
+      const cellLeft = cellRect.left - boardRect.left;
+      const cellTop = cellRect.top - boardRect.top;
+      const cellRight = cellLeft + cellRect.width;
+      const cellBottom = cellTop + cellRect.height;
+      
+      if (cellLeft < selectionRight && cellRight > selectionLeft &&
+          cellTop < selectionBottom && cellBottom > selectionTop) {
+        
+        const cellId = cell.dataset.cellId;
+        const boardCell = gameBoard.flat().find(c => c.id === cellId);
+        if (boardCell) {
+          selectedCellsData.push(boardCell);
+        }
+      }
+    });
+    
+    console.log('Found', selectedCellsData.length, 'selected cells:', selectedCellsData.map(c => c.id));
+    setSelectedCells(selectedCellsData);
+  };
+
+  // 마우스 업 이벤트
+  const handleMouseUp = (e) => {
+    if (!isSelecting) return;
+    
+    checkSelection();
+    cleanupSelection();
+  };
+
+  // 마우스 리브 이벤트
+  const handleMouseLeave = (e) => {
+    if (isSelecting) {
+      handleMouseUp(e);
+    }
+  };  // 선택 검사
+  const checkSelection = () => {
+    console.log('checkSelection called with selectedCells:', selectedCells);
+    if (selectedCells.length < 2) {
+      console.log('Not enough cells selected:', selectedCells.length);
+      return;
+    }
+    
+    const sum = selectedCells.reduce((total, cell) => total + cell.value, 0);
+    console.log('Sum calculated:', sum, 'Target:', TARGET_SUM);
+    
+    if (sum === TARGET_SUM) {
+      console.log('Valid selection! Removing cells:', selectedCells);
+      setScore(prevScore => prevScore + selectedCells.length);
+      
+      // 애니메이션 효과
+      selectedCells.forEach(cell => {
+        const cellElement = document.querySelector(`[data-cell-id="${cell.id}"] .apple-image`);
+        console.log('Found cell element for', cell.id, ':', cellElement);
+        if (cellElement) {
+          cellElement.classList.add('apple-explode');
+        }
+      });
+
+      // 애니메이션이 끝나면 사과 값만 변경 (보드 구조는 유지)
+      setTimeout(() => {        setGameBoard(prevBoard => {
+          const newBoard = prevBoard.map(row => [...row]);
+          selectedCells.forEach(cell => {
+            const [x, y] = cell.id.split('-').map(Number);
+            if (newBoard[y] && newBoard[y][x]) {
+              newBoard[y][x] = {
+                ...newBoard[y][x],
+                value: Math.floor(Math.random() * 9) + 1
+              };
+            }
+          });
+          
+          // 새 보드에서 가능한 움직임 체크
+          setTimeout(() => {
+            checkForPossibleMoves(newBoard);
+          }, 100);
+          
+          return newBoard;
+        });
+      }, 250);
+      
+      setApplesRemoved(prev => prev + selectedCells.length);
+    }
+    
+    setSelectedCells([]);
+  };
+  // 선택 정리
+  const cleanupSelection = () => {
+    setIsSelecting(false);
+    setSelectedCells([]);
+    mouseIsDownRef.current = false;
+    
+    if (selectionBoxRef.current) {
+      selectionBoxRef.current.remove();
+      selectionBoxRef.current = null;
+    }
+  };
+
+  // 드래그 관련 함수들
+  const preventDrag = (e) => {
+    e.preventDefault();
+    return false;
+  };
+
+  const preventContextMenu = (e) => {
+    e.preventDefault();
+    return false;
+  };
 
   return (
     <div className="classic-container">
@@ -198,11 +396,15 @@ const TimeAttackMode = ({ onBack }) => {
             {score}
           </span>
         </div>
-      </div>
-
-      {/* 게임 보드 */}
+      </div>      {/* 게임 보드 */}
       <div 
         ref={gameBoardRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onDragStart={preventDrag}
+        onContextMenu={preventContextMenu}
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
@@ -214,7 +416,9 @@ const TimeAttackMode = ({ onBack }) => {
           borderRadius: '20px',
           padding: '20px',
           boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
-          marginBottom: '30px'
+          marginBottom: '30px',
+          position: 'relative',
+          userSelect: 'none'
         }}
       >
         {gameBoard.flat().map((cell) => (
@@ -232,7 +436,7 @@ const TimeAttackMode = ({ onBack }) => {
               color: '#333',
               cursor: 'pointer',
               transition: 'transform 0.2s ease',
-              border: cell.selected ? '3px solid #FF6B6B' : '2px solid transparent'
+              border: selectedCells.some(selected => selected.id === cell.id) ? '3px solid #66BE6E' : '2px solid transparent'
             }}
           >            <img 
               src={appleImages[cell.value] || appleImages.default} 

@@ -74,26 +74,25 @@ const AppleAllClear = ({ onBack }) => {
     
     if (isSelecting) {
       handleMouseUp(e);
-    }
-  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
-  // 초기화
-  useEffect(() => {
-    // eslint-disable-next-line no-use-before-define
-    initGame();
+    }  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  // 랜덤 숫자 생성 (1~9)
+  const getRandomAppleValue = () => {
+    return Math.floor(Math.random() * 9) + 1;
+  };
+  
+  // 게임 보드 생성 - 먼저 정의
+  const generateBoard = useCallback(() => {
+    // 10x15 배열 생성 (세로 10줄, 가로 15칸)
+    const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
+      Array(BOARD_SIZE_X).fill().map(() => ({
+        value: getRandomAppleValue(),
+        isVisible: true
+      }))
+    );
     
-    // 전역 이벤트 리스너 추가
-    document.addEventListener('mouseup', handleGlobalMouseUp);
-    document.addEventListener('contextmenu', preventContextMenu);
-    
-    return () => {
-      // 전역 이벤트 리스너 제거
-      document.removeEventListener('mouseup', handleGlobalMouseUp);
-      document.removeEventListener('contextmenu', preventContextMenu);
-      
-      // 타이머 정리
-      if (timerRef.current) {        clearInterval(timerRef.current);
-      }
-    };  }, [handleGlobalMouseUp]); // eslint-disable-line react-hooks/exhaustive-deps
+    setGameBoard(newBoard);
+  }, []);
 
   const initGame = useCallback(() => {
     setScore(0);
@@ -120,24 +119,27 @@ const AppleAllClear = ({ onBack }) => {
       });
     }, 1000);
       generateBoard();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // generateBoard 의존성 제거
   
-  // 랜덤 숫자 생성 (1~9)
-  const getRandomAppleValue = () => {
-    return Math.floor(Math.random() * 9) + 1;
-  };
-  
-  // 게임 보드 생성
-  const generateBoard = () => {
-    // 10x15 배열 생성 (세로 10줄, 가로 15칸)
-    const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
-      Array(BOARD_SIZE_X).fill().map(() => ({
-        value: getRandomAppleValue(),
-        isVisible: true
-      }))
-    );
+  // 초기화
+  useEffect(() => {
+    initGame();
     
-    setGameBoard(newBoard);  };
+    // 전역 이벤트 리스너 추가
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    document.addEventListener('contextmenu', preventContextMenu);
+    
+    return () => {
+      // 전역 이벤트 리스너 제거
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('contextmenu', preventContextMenu);
+      
+      // 타이머 정리
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []); // 빈 배열로 변경 - 컴포넌트 마운트시에만 실행
   
   // 마우스 다운 이벤트
   const handleMouseDown = (e) => {

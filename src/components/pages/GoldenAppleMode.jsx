@@ -96,51 +96,12 @@ const GoldenAppleMode = ({ onBack }) => {
     // 전역 마우스 업 이벤트 핸들러
   const handleGlobalMouseUp = useCallback((e) => {
     mouseIsDownRef.current = false;
-    
-    if (isSelecting) {
+      if (isSelecting) {
       handleMouseUp(e);
-    }
-  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
-  // 초기화
-  useEffect(() => {
-    // eslint-disable-next-line no-use-before-define
-    initGame();
-    
-    document.addEventListener('mouseup', handleGlobalMouseUp);
-    document.addEventListener('contextmenu', preventContextMenu);
-    
-    return () => {
-      document.removeEventListener('mouseup', handleGlobalMouseUp);
-      document.removeEventListener('contextmenu', preventContextMenu);
-        if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };  }, [handleGlobalMouseUp]); // eslint-disable-line react-hooks/exhaustive-deps
-    const initGame = useCallback(() => {
-    setScore(0);
-    setSelectedCells([]);
-    setGameOver(false);
-    setTimeLeft(GAME_TIME);
-    setApplesRemoved(0);
-    
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prevTime => {
-        if (prevTime <= 1) {
-          clearInterval(timerRef.current);
-          setGameOver(true);
-          return 0;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
-      generateBoard();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-    // 게임 보드 생성
-  const generateBoard = () => {
+    }  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  // 게임 보드 생성 - 먼저 정의
+  const generateBoard = useCallback(() => {
     const newBoard = Array(BOARD_SIZE_Y).fill().map(() =>      Array(BOARD_SIZE_X).fill(null)
     );
     
@@ -203,10 +164,50 @@ const GoldenAppleMode = ({ onBack }) => {
         isSelectable: true
       };
     }
+      setGameBoard(newBoard);
+  }, []); // generateBoard는 외부 의존성이 없으므로 빈 배열
+    // 게임 초기화 함수
+  const initGame = useCallback(() => {
+    setScore(0);
+    setSelectedCells([]);
+    setGameOver(false);
+    setTimeLeft(GAME_TIME);
+    setApplesRemoved(0);
     
-    setGameBoard(newBoard);
-  };
-  
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 1) {
+          clearInterval(timerRef.current);
+          setGameOver(true);
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+    
+    generateBoard();
+  }, []); // generateBoard 의존성 제거
+
+  // 초기화
+  useEffect(() => {
+    initGame();
+    
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    document.addEventListener('contextmenu', preventContextMenu);
+    
+    return () => {
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('contextmenu', preventContextMenu);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []); // 빈 배열로 변경 - 컴포넌트 마운트시에만 실행
+
   // 마우스 다운 이벤트
   const handleMouseDown = (e) => {
     if (e.button === 2) return;
@@ -221,11 +222,7 @@ const GoldenAppleMode = ({ onBack }) => {
     setIsSelecting(true);
     setSelectedCells([]);
     setStartPos({ x, y });
-    
-    createSelectionBox(x, y);
-    
-    e.preventDefault();
-    e.stopPropagation();
+      createSelectionBox(x, y);
   };
   
   // 마우스 이동 이벤트
