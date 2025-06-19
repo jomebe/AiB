@@ -11,6 +11,7 @@ import Apple7 from '../../images/apple7.svg';
 import Apple8 from '../../images/apple8.svg';
 import Apple9 from '../../images/apple9.svg';
 import AppleSVG from '../../images/apples.svg';
+import Rankings from '../Rankings/Rankings';
 
 const AppleAllClear = ({ onBack }) => {
   // 게임 설정
@@ -20,14 +21,15 @@ const AppleAllClear = ({ onBack }) => {
   const GAME_TIME = 120; // 2분 (초 단위)
   
   // 게임 상태
-  const [gameBoard, setGameBoard] = useState([]);
-  const [score, setScore] = useState(0);
+  const [gameBoard, setGameBoard] = useState([]);  const [score, setScore] = useState(0);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedCells, setSelectedCells] = useState([]);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [gameOver, setGameOver] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);  const [applesRemoved, setApplesRemoved] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
+  const [applesRemoved, setApplesRemoved] = useState(0);
   const [allClear, setAllClear] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
   
   const gameBoardRef = useRef(null);
   const selectionBoxRef = useRef(null);
@@ -58,10 +60,13 @@ const AppleAllClear = ({ onBack }) => {
   const preventContextMenu = (e) => {
     e.preventDefault();
     return false;
+  };  const handleRankingClick = () => {
+    setShowRanking(true);
   };
-  const handleRankingClick = () => {
-    // TODO: 랭킹 모달/페이지 표시 로직
-    console.log('랭킹 조회 요청');
+
+  // 랭킹 팝업 닫기
+  const handleCloseRanking = () => {
+    setShowRanking(false);
   };
     // 전역 마우스 업 이벤트 핸들러
   const handleGlobalMouseUp = useCallback((e) => {
@@ -132,8 +137,7 @@ const AppleAllClear = ({ onBack }) => {
       }))
     );
     
-    setGameBoard(newBoard);
-  };
+    setGameBoard(newBoard);  };
   
   // 마우스 다운 이벤트
   const handleMouseDown = (e) => {
@@ -154,8 +158,7 @@ const AppleAllClear = ({ onBack }) => {
     // 선택 상자 생성
     createSelectionBox(x, y);
     
-    // 텍스트 선택 방지
-    e.preventDefault();
+    // 이벤트 전파 중지 (드래그를 위해 preventDefault 제거)
     e.stopPropagation();
   };
   
@@ -287,8 +290,7 @@ const AppleAllClear = ({ onBack }) => {
   const checkAllClear = (board) => {
     return board.every(row => row.every(cell => !cell.isVisible));
   };
-  
-  // 선택 검사
+    // 선택 검사
   const checkSelection = () => {
     if (selectedCells.length < 2) return;
     
@@ -296,9 +298,8 @@ const AppleAllClear = ({ onBack }) => {
     const sum = selectedCells.reduce((total, cell) => total + cell.value, 0);
     
     // 합계가 목표값과 일치하는지 확인
-    if (sum === TARGET_SUM) {
-      // 점수 추가
-      setScore(prevScore => prevScore + sum * selectedCells.length);
+    if (sum === TARGET_SUM) {      // 점수 추가
+      setScore(prevScore => prevScore + selectedCells.length); // 사과 하나당 1점
       
       // 애니메이션 효과를 위해 선택된 셀에 클래스 추가
       selectedCells.forEach(cell => {
@@ -306,24 +307,27 @@ const AppleAllClear = ({ onBack }) => {
         if (cellElement) {
           // 펑 터지는 애니메이션 적용
           cellElement.classList.add('apple-explode');
-          
-          // 애니메이션이 끝나면 사과 제거
-          setTimeout(() => {
-            const newBoard = [...gameBoard];
-            newBoard[cell.row][cell.col].isVisible = false;
-            setGameBoard(newBoard);
-            
-            // 모든 사과가 제거되었는지 확인
-            if (checkAllClear(newBoard)) {
-              setAllClear(true);
-              setGameOver(true);
-              if (timerRef.current) {
-                clearInterval(timerRef.current);
-              }
-            }
-          }, 250); // 애니메이션 시간과 맞춤 (0.25초)
         }
-      });
+      });      // 애니메이션이 끝나면 모든 선택된 사과를 한 번에 제거
+      setTimeout(() => {
+        setGameBoard(prevBoard => {
+          const newBoard = prevBoard.map(row => [...row]);
+          selectedCells.forEach(cell => {
+            newBoard[cell.row][cell.col].isVisible = false;
+          });
+          
+          // 모든 사과가 제거되었는지 확인
+          if (checkAllClear(newBoard)) {
+            setAllClear(true);
+            setGameOver(true);
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+            }
+          }
+          
+          return newBoard;
+        });
+      }, 250); // 애니메이션 시간과 맞춤 (0.25초)
       
       // 제거된 사과 개수 업데이트
       setApplesRemoved(prev => prev + selectedCells.length);
@@ -331,14 +335,15 @@ const AppleAllClear = ({ onBack }) => {
     
     setSelectedCells([]);
   };
-  
+
   // 타이머 진행률 계산 (0~100)
   const calculateTimeProgress = () => {
     return (timeLeft / GAME_TIME) * 100;
   };
-  
+
   return (
-    <div className="classic-mode-container">      <div className="game-header">
+    <div className="classic-mode-container">
+      <div className="game-header">
         <div className="header-content">
           <h1 className="game-title">Apple All Clear</h1>
           <div className="progress-container">
@@ -384,8 +389,7 @@ const AppleAllClear = ({ onBack }) => {
                 onContextMenu={preventContextMenu}
                 onDragStart={preventDrag}
                 onSelectStart={preventDrag}
-              >
-                {cell.isVisible && (
+              >                {cell.isVisible && (
                   <img 
                     src={appleImages[cell.value] || appleImages.default} 
                     alt={`Apple ${cell.value}`} 
@@ -393,6 +397,7 @@ const AppleAllClear = ({ onBack }) => {
                     draggable="false"
                     onDragStart={preventDrag}
                     onContextMenu={preventContextMenu}
+                    style={{ pointerEvents: 'none' }}
                   />
                 )}
               </div>
@@ -400,30 +405,62 @@ const AppleAllClear = ({ onBack }) => {
           })
         )).flat()}
       </div>
-      
-      {gameOver && (
+        {gameOver && (
         <div className="game-over-overlay">
-          <div className="game-over-message">
-            {allClear ? (
-              <>
-                <h2>🎉 All Clear! 🎉</h2>
-                <p>모든 사과를 제거했습니다!</p>
-              </>
-            ) : (
-              <h2>게임 종료!</h2>
-            )}
-            <p>최종 점수: {score}</p>
-            <p>제거한 사과: {applesRemoved}개</p>
-            <button onClick={initGame}>다시 시작</button>
-            <button onClick={onBack} className="back-button">메인으로 돌아가기</button>
+          <div className="game-over-modal">
+            <div className="game-over-header">
+              <div className="game-over-icon">{allClear ? '🎉' : '🎯'}</div>
+              <h2 className="game-over-title">
+                {allClear ? 'All Clear!' : '게임 완료!'}
+              </h2>
+              {allClear && (
+                <p className="game-over-subtitle">모든 사과를 제거했습니다!</p>
+              )}
+            </div>
+            
+            <div className="game-over-stats">
+              <div className="stat-item">
+                <div className="stat-value">{score.toLocaleString()}</div>
+                <div className="stat-label">최종 점수</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value">{applesRemoved}</div>
+                <div className="stat-label">제거한 사과</div>
+              </div>
+            </div>
+            
+            <div className="game-over-actions">
+              <button onClick={initGame} className="primary-button">
+                <span className="button-icon">🔄</span>
+                다시 시작
+              </button>
+              <button onClick={onBack} className="secondary-button">
+                <span className="button-icon">🏠</span>
+                메인으로
+              </button>
+            </div>
           </div>
         </div>
       )}
-      
-      {/* 랭킹 버튼 */}
+        {/* 랭킹 버튼 */}
       <button className="ranking-button" onClick={handleRankingClick}>
         <span className="trophy-icon">🏆</span>
       </button>
+
+      {/* 랭킹 모달 */}
+      {showRanking && (
+        <div className="ranking-modal-overlay">
+          <div className="ranking-modal-content">
+            <div className="ranking-modal-header">
+              <h2>🏆 랭킹</h2>
+              <button onClick={handleCloseRanking} className="close-button">
+                ×
+              </button>
+            </div>
+            <Rankings onBack={handleCloseRanking} isModal={true} isOpen={showRanking} gameMode="appleallclear" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

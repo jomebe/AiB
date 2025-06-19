@@ -204,10 +204,8 @@ const PartnerMode = ({ onBack }) => {
         if (!hasSolution(board)) {
             createSolution(board);
         }
-    };
-
-    // 게임 보드 생성
-    const generateBoard = useCallback(() => {
+    };    // 게임 보드 생성
+    const generateBoard = () => {
         console.log('generateBoard called! BOARD_SIZE_X:', BOARD_SIZE_X, 'BOARD_SIZE_Y:', BOARD_SIZE_Y);
         // 클래식 모드와 동일한 구조로 생성 (객체 형태로)
         const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
@@ -221,7 +219,7 @@ const PartnerMode = ({ onBack }) => {
         ensureSolution(newBoard);
         console.log('Generated board:', newBoard.length, 'rows x', newBoard[0]?.length, 'cols');
         return newBoard;
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    };
 
     // Firebase 데이터 초기화 (모든 게임과 플레이어 데이터 삭제)
     const clearFirebaseData = async () => {
@@ -855,12 +853,13 @@ const PartnerMode = ({ onBack }) => {
                 if (cellElement) {
                     // 펑 터지는 애니메이션 적용
                     cellElement.classList.add('apple-explode');
-                    
-                    // 애니메이션이 끝나면 사과 제거
+                      // 애니메이션이 끝나면 사과 제거
                     setTimeout(() => {
-                        const newBoard = [...gameBoard];
-                        newBoard[cell.row][cell.col].isVisible = false;
-                        setGameBoard(newBoard);
+                        setGameBoard(prevBoard => {
+                            const newBoard = [...prevBoard];
+                            newBoard[cell.row][cell.col].isVisible = false;
+                            return newBoard;
+                        });
                     }, 250); // 애니메이션 시간과 맞춤 (0.25초)
                 }
             });            // Firebase에 업데이트
@@ -1027,14 +1026,14 @@ const PartnerMode = ({ onBack }) => {
                                     onDragStart={preventDrag}
                                     onSelectStart={preventDrag}
                                 >
-                                    {cell.isVisible && (
-                                        <img 
+                                    {cell.isVisible && (                                        <img 
                                             src={appleImages[cell.value] || appleImages.default} 
                                             alt={`Apple ${cell.value}`} 
                                             className="apple-image" 
                                             draggable="false"
                                             onDragStart={preventDrag}
                                             onContextMenu={preventContextMenu}
+                                            style={{ pointerEvents: 'none' }}
                                         />
                                     )}
                                 </div>

@@ -45,17 +45,24 @@ class ScoreService {
             console.error('Score submission failed:', error);
             throw error;
         }
-    }
-
-    // 랭킹 조회
+    }    // 랭킹 조회
     async getRankings(mode = null, limit = 10, offset = 0) {
         try {
+            console.log('ScoreService.getRankings 호출:', { mode, limit, offset });
+            
             const params = { limit, offset };
             if (mode) params.mode = mode;
 
+            console.log('API 호출 파라미터:', params);
             const response = await ApiClient.getRankings(params);
+            console.log('API 응답:', response);
             
             if (response.success) {
+                console.log('성공 응답 데이터:', {
+                    rankings: response.rankings,
+                    total: response.total,
+                    userRank: response.userRank
+                });
                 return {
                     rankings: response.rankings,
                     total: response.total,

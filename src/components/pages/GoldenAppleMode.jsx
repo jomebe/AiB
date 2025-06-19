@@ -404,20 +404,24 @@ const GoldenAppleMode = ({ onBack }) => {
       
       // 점수 추가
       setScore(prevScore => prevScore + totalScore);
-      
-      // 애니메이션 효과
+        // 애니메이션 효과
       selectedCells.forEach(cell => {
         const cellElement = document.querySelector(`.board-cell[data-row="${cell.row}"][data-col="${cell.col}"] .apple-image`);
         if (cellElement) {
           cellElement.classList.add('apple-explode');
-          
-          setTimeout(() => {
-            const newBoard = [...gameBoard];
-            newBoard[cell.row][cell.col].isVisible = false;
-            setGameBoard(newBoard);
-          }, 250);
         }
       });
+
+      // 애니메이션이 끝나면 모든 선택된 사과를 한 번에 제거
+      setTimeout(() => {
+        setGameBoard(prevBoard => {
+          const newBoard = prevBoard.map(row => [...row]);
+          selectedCells.forEach(cell => {
+            newBoard[cell.row][cell.col].isVisible = false;
+          });
+          return newBoard;
+        });
+      }, 250);
       
       setApplesRemoved(prev => prev + selectedCells.length);
     }
@@ -478,14 +482,14 @@ const GoldenAppleMode = ({ onBack }) => {
                 onDragStart={preventDrag}
                 onSelectStart={preventDrag}
               >
-                {cell.isVisible && (
-                  <img 
+                {cell.isVisible && (                  <img 
                     src={getAppleImage(cell)} 
                     alt={`${cell.type} Apple ${cell.value}`} 
                     className="apple-image" 
                     draggable="false"
                     onDragStart={preventDrag}
                     onContextMenu={preventContextMenu}
+                    style={{ pointerEvents: 'none' }}
                   />
                 )}
               </div>
@@ -493,15 +497,35 @@ const GoldenAppleMode = ({ onBack }) => {
           })
         )).flat()}
       </div>
-      
-      {gameOver && (
+        {gameOver && (
         <div className="game-over-overlay">
-          <div className="game-over-message">
-            <h2>게임 종료!</h2>
-            <p>최종 점수: {score}</p>
-            <p>제거한 사과: {applesRemoved}개</p>
-            <button onClick={initGame}>다시 시작</button>
-            <button onClick={onBack} className="back-button">메인으로 돌아가기</button>
+          <div className="game-over-modal">
+            <div className="game-over-header">
+              <div className="game-over-icon">🍯</div>
+              <h2 className="game-over-title">게임 완료!</h2>
+            </div>
+            
+            <div className="game-over-stats">
+              <div className="stat-item">
+                <div className="stat-value">{score.toLocaleString()}</div>
+                <div className="stat-label">최종 점수</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value">{applesRemoved}</div>
+                <div className="stat-label">제거한 사과</div>
+              </div>
+            </div>
+            
+            <div className="game-over-actions">
+              <button onClick={initGame} className="primary-button">
+                <span className="button-icon">🔄</span>
+                다시 시작
+              </button>
+              <button onClick={onBack} className="secondary-button">
+                <span className="button-icon">🏠</span>
+                메인으로
+              </button>
+            </div>
           </div>
         </div>
       )}

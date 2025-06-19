@@ -7,17 +7,52 @@ const Rankings = ({ isOpen, onClose, gameMode = 'classic' }) => {
   const [rankings, setRankings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
-  const loadRankings = useCallback(async () => {
+  const [currentUser, setCurrentUser] = useState(null);  const loadRankings = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('=== 랭킹 로딩 시작 ===', gameMode);
+      
+      // 실제 API 호출
       const data = await ScoreService.getRankings(gameMode);
-      setRankings(data.rankings || []);
+      console.log('API 응답 데이터:', data);
+      
+      if (data && data.rankings) {
+        // API 응답 데이터를 올바른 형식으로 변환
+        const formattedRankings = data.rankings.map((item, index) => ({
+          _id: `${item.playerName}_${item.timestamp}`,
+          username: item.playerName,
+          score: item.score,
+          gameMode: item.mode,
+          createdAt: item.timestamp,
+          rank: item.rank || index + 1,
+          playTime: item.playTime
+        }));
+        
+        console.log('포맷된 랭킹 데이터:', formattedRankings);
+        setRankings(formattedRankings);
+      } else {
+        console.log('API 응답이 비어있음, 테스트 데이터 사용');
+        // API 응답이 없으면 테스트 데이터 사용
+        const testData = [
+          { _id: '1', username: '테스트유저1', score: 1000, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 1 },
+          { _id: '2', username: '테스트유저2', score: 800, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 2 },
+          { _id: '3', username: '테스트유저3', score: 600, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 3 }
+        ];
+        setRankings(testData);
+      }
+      
     } catch (err) {
       console.error('랭킹 로드 실패:', err);
-      setError('랭킹을 불러오는데 실패했습니다.');
-      setRankings([]);
+      setError('랭킹을 불러오는데 실패했습니다: ' + err.message);
+      
+      // 에러 발생 시에도 테스트 데이터 표시
+      const testData = [
+        { _id: '1', username: '테스트유저1', score: 1000, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 1 },
+        { _id: '2', username: '테스트유저2', score: 800, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 2 },
+        { _id: '3', username: '테스트유저3', score: 600, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 3 }
+      ];
+      setRankings(testData);
     } finally {
       setLoading(false);
     }
@@ -73,12 +108,37 @@ const Rankings = ({ isOpen, onClose, gameMode = 'classic' }) => {
               <button onClick={loadRankings}>다시 시도</button>
             </div>
           )}
-          
-          {!loading && !error && (
+            {!loading && !error && (
             <div className="rankings-list">
               {rankings.length === 0 ? (
                 <div className="no-rankings">
                   <p>아직 등록된 기록이 없습니다.</p>
+                  <p>게임을 플레이하고 점수를 등록해보세요!</p>
+                  
+                  {/* 임시 테스트 데이터 */}
+                  <div className="test-data" style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
+                    <p>테스트 데이터:</p>
+                    <div className="ranking-table">
+                      <div className="ranking-header-row">
+                        <div className="rank-col">순위</div>
+                        <div className="name-col">이름</div>
+                        <div className="score-col">점수</div>
+                        <div className="date-col">날짜</div>
+                      </div>
+                      <div className="ranking-row">
+                        <div className="rank-col">1 🥇</div>
+                        <div className="name-col">테스트유저1</div>
+                        <div className="score-col">1,250</div>
+                        <div className="date-col">2024.12.19</div>
+                      </div>
+                      <div className="ranking-row">
+                        <div className="rank-col">2 🥈</div>
+                        <div className="name-col">테스트유저2</div>
+                        <div className="score-col">980</div>
+                        <div className="date-col">2024.12.18</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="ranking-table">

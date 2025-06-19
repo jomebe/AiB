@@ -250,3 +250,238 @@
   margin: 5px 0;
   line-height: 1.3;
 }
+
+/* 새로운 게임 종료 모달 스타일 */
+.game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.game-over-modal {
+  background: linear-gradient(135deg, #FFF8DC, #F5F5DC);
+  padding: 40px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 8px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 2px solid #DAA520;
+  min-width: 400px;
+  max-width: 500px;
+  animation: slideUp 0.4s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.game-over-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #DAA520, #FFD700, #DAA520);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    background-position: -200% 0;
+  }
+  50% {
+    background-position: 200% 0;
+  }
+}
+
+.game-over-header {
+  margin-bottom: 32px;
+}
+
+.game-over-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: bounce 1s ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.game-over-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #8B4513;
+  margin: 0;
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.game-over-subtitle {
+  font-size: 16px;
+  color: #DAA520;
+  margin: 8px 0 0 0;
+  font-weight: 500;
+}
+
+.game-over-stats {
+  display: flex;
+  justify-content: space-around;
+  margin: 32px 0;
+  gap: 24px;
+}
+
+.stat-item {
+  flex: 1;
+  padding: 20px;
+  background: linear-gradient(135deg, #FFFACD, #F5F5DC);
+  border-radius: 16px;
+  border: 1px solid #DAA520;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(218, 165, 32, 0.2);
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #DAA520;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(218, 165, 32, 0.2);
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #8B4513;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.game-over-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.primary-button, .secondary-button {
+  flex: 1;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #DAA520, #B8860B);
+  color: white;
+  box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+}
+
+.primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(218, 165, 32, 0.4);
+  background: linear-gradient(135deg, #B8860B, #9ACD32);
+}
+
+.secondary-button {
+  background: linear-gradient(135deg, #F5F5DC, #FFFACD);
+  color: #8B4513;
+  border: 2px solid #DAA520;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.secondary-button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #FFFACD, #F0E68C);
+  box-shadow: 0 8px 20px rgba(218, 165, 32, 0.2);
+  border-color: #B8860B;
+}
+
+.button-icon {
+  font-size: 18px;
+}
+
+.primary-button:active, .secondary-button:active {
+  transform: translateY(0);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 600px) {
+  .game-over-modal {
+    margin: 20px;
+    padding: 32px 24px;
+    min-width: unset;
+    max-width: unset;
+    width: calc(100% - 40px);
+  }
+  
+  .game-over-stats {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .game-over-actions {
+    flex-direction: column;
+  }
+  
+  .game-over-title {
+    font-size: 28px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+  }
+}

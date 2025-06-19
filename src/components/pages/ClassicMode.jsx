@@ -13,8 +13,8 @@ import Apple9 from '../../images/apple9.svg';
 import AppleSVG from '../../images/apples.svg';
 import AuthService from '../../utils/auth';
 import ScoreService from '../../utils/scoreService';
-import Login from '../Login/Login';
 import Rankings from '../Rankings/Rankings';
+import Login from '../Login/Login';
 
 const ClassicMode = ({ onBack }) => {
   // 게임 설정
@@ -29,7 +29,9 @@ const ClassicMode = ({ onBack }) => {
   const [selectedCells, setSelectedCells] = useState([]);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [gameOver, setGameOver] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);  const [applesRemoved, setApplesRemoved] = useState(0);  const [showRanking, setShowRanking] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
+  const [applesRemoved, setApplesRemoved] = useState(0);
+  const [showRanking, setShowRanking] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const gameBoardRef = useRef(null);
@@ -79,7 +81,6 @@ const ClassicMode = ({ onBack }) => {
     if (isSelecting) {
       handleMouseUp(e);
     }  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // 초기화
   useEffect(() => {
     // 인증 상태 확인
@@ -88,9 +89,10 @@ const ClassicMode = ({ onBack }) => {
     // 인증 상태 변경 리스너 등록
     const unsubscribe = AuthService.addListener((user) => {
       // 인증 상태 변경 시 필요한 처리가 있다면 여기에 추가
-      console.log('User authentication changed:', user);    });
+      console.log('User authentication changed:', user);
+    });
 
-    // eslint-disable-next-line no-use-before-define
+    // 게임 초기화 (한 번만 실행)
     initGame();
     
     // 전역 이벤트 리스너 추가
@@ -108,13 +110,34 @@ const ClassicMode = ({ onBack }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, [handleGlobalMouseUp]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // 빈 의존성 배열로 한 번만 실행  // 랜덤 숫자 생성 (1~9)
+  const getRandomAppleValue = () => {
+    return Math.floor(Math.random() * 9) + 1;
+  };
 
-  const initGame = useCallback(() => {
-    setScore(0);    scoreRef.current = 0;
+  // 게임 보드 생성
+  const generateBoard = () => {
+    console.log('generateBoard 호출됨');
+    // 10x15 배열 생성 (세로 10줄, 가로 15칸)
+    const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
+      Array(BOARD_SIZE_X).fill().map(() => ({
+        value: getRandomAppleValue(),
+        isVisible: true
+      }))
+    );
+    
+    console.log('새 보드 생성:', newBoard.length, 'x', newBoard[0]?.length);
+    setGameBoard(newBoard);
+  };
+
+  const initGame = () => {
+    console.log('initGame 호출됨');
+    setScore(0);
+    scoreRef.current = 0;
     setSelectedCells([]);
     setGameOver(false);
-    setTimeLeft(GAME_TIME);    setApplesRemoved(0);
+    setTimeLeft(GAME_TIME);
+    setApplesRemoved(0);
     applesRemovedRef.current = 0;
     gameStartTimeRef.current = Date.now();
     setScoreSubmitted(false);
@@ -135,25 +158,9 @@ const ClassicMode = ({ onBack }) => {
         return prevTime - 1;
       });
     }, 1000);
-      generateBoard();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  
-  // 랜덤 숫자 생성 (1~9)
-  const getRandomAppleValue = () => {
-    return Math.floor(Math.random() * 9) + 1;
-  };
-    // 게임 보드 생성
-  const generateBoard = () => {
-    // 10x15 배열 생성 (세로 10줄, 가로 15칸)
-    const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
-      Array(BOARD_SIZE_X).fill().map(() => ({
-        value: getRandomAppleValue(),
-        isVisible: true
-      }))
-    );
     
-    setGameBoard(newBoard);
-  };  // 게임 종료 처리
+    generateBoard();
+  };// 게임 종료 처리
   const handleGameEnd = async () => {
     setGameOver(true);
       // ref에서 최신 값 가져오기
@@ -229,8 +236,7 @@ const ClassicMode = ({ onBack }) => {
 
   // 로그인 모달 닫기
   const handleLoginClose = () => {
-    setShowLogin(false);
-  };
+    setShowLogin(false);  };
   
   // 마우스 다운 이벤트
   const handleMouseDown = (e) => {
@@ -251,8 +257,7 @@ const ClassicMode = ({ onBack }) => {
     // 선택 상자 생성
     createSelectionBox(x, y);
     
-    // 텍스트 선택 방지
-    e.preventDefault();
+    // 이벤트 전파 중지 (드래그를 위해 preventDefault 제거)
     e.stopPropagation();
   };
   
@@ -385,32 +390,34 @@ const ClassicMode = ({ onBack }) => {
     
     // 선택된 셀의 값 합계 계산
     const sum = selectedCells.reduce((total, cell) => total + cell.value, 0);
-    console.log('선택된 셀:', selectedCells, '합계:', sum);
-      // 합계가 목표값과 일치하는지 확인
+    console.log('선택된 셀:', selectedCells, '합계:', sum);      // 합계가 목표값과 일치하는지 확인
     if (sum === TARGET_SUM) {
-      const newScore = score + sum * selectedCells.length;
+      const newScore = score + selectedCells.length; // 사과 하나당 1점
       console.log('점수 업데이트:', score, '->', newScore);
       
       // 점수 추가
       setScore(newScore);
       scoreRef.current = newScore;
-      
-      // 애니메이션 효과를 위해 선택된 셀에 클래스 추가
+        // 애니메이션 효과를 위해 선택된 셀에 클래스 추가
       selectedCells.forEach(cell => {
         const cellElement = document.querySelector(`.board-cell[data-row="${cell.row}"][data-col="${cell.col}"] .apple-image`);
         if (cellElement) {
           // 펑 터지는 애니메이션 적용
           cellElement.classList.add('apple-explode');
-          
-          // 애니메이션이 끝나면 사과 제거
-          setTimeout(() => {
-            const newBoard = [...gameBoard];
-            newBoard[cell.row][cell.col].isVisible = false;
-            setGameBoard(newBoard);
-          }, 250); // 애니메이션 시간과 맞춤 (0.25초)
         }
-      });
-        // 제거된 사과 개수 업데이트
+      });      // 애니메이션이 끝나면 모든 선택된 사과를 한 번에 제거
+      setTimeout(() => {
+        setGameBoard(prevBoard => {
+          const newBoard = prevBoard.map(row => [...row]);
+          selectedCells.forEach(cell => {
+            newBoard[cell.row][cell.col].isVisible = false;
+          });
+          console.log('사과 제거 완료, 선택된 셀 개수:', selectedCells.length);
+          return newBoard;
+        });
+      }, 250); // 애니메이션 시간과 맞춤 (0.25초)
+      
+      // 제거된 사과 개수 업데이트
       setApplesRemoved(prev => {
         const newCount = prev + selectedCells.length;
         console.log('사과 제거 개수 업데이트:', prev, '->', newCount);
@@ -421,12 +428,13 @@ const ClassicMode = ({ onBack }) => {
     
     setSelectedCells([]);
   };
-  
+
   // 타이머 진행률 계산 (0~100)
   const calculateTimeProgress = () => {
     return (timeLeft / GAME_TIME) * 100;
   };
-    return (
+
+  return (
     <div className="classic-mode-container">
       <div className="game-header">
         <div className="header-content">
@@ -436,20 +444,16 @@ const ClassicMode = ({ onBack }) => {
             </button>
             <h1 className="game-title">Classic Apple</h1>
           </div>
-          
-          <div className="header-center">
+            <div className="header-center">
             <div className="progress-container">
               <div 
                 className="progress-bar" 
                 style={{ width: `${calculateTimeProgress()}%` }}
               ></div>
             </div>
-            
-            <div className="apple-score-container">
-              <img src={AppleSVG} alt="Apple" className="apple-icon" />
-              <span className="apple-count">{applesRemoved}</span>
-            </div>
-          </div>          <div className="header-right">
+          </div>
+          
+          <div className="header-right">
             {AuthService.isAuthenticated() ? (
               <div className="user-info">
                 <span className="player-name">{AuthService.getPlayerName()}</span>
@@ -479,8 +483,7 @@ const ClassicMode = ({ onBack }) => {
             const cell = gameBoard[rowIndex] && gameBoard[rowIndex][colIndex];
             if (!cell) return null;
             
-            return (
-              <div 
+            return (              <div 
                 key={`${rowIndex}-${colIndex}`} 
                 className={`board-cell ${cell.isVisible ? 'apple-cell' : 'empty-cell'}`}
                 data-row={rowIndex}
@@ -490,9 +493,7 @@ const ClassicMode = ({ onBack }) => {
                 draggable="false"
                 onContextMenu={preventContextMenu}
                 onDragStart={preventDrag}
-                onSelectStart={preventDrag}
-              >
-                {cell.isVisible && (
+              >                {cell.isVisible && (
                   <img 
                     src={appleImages[cell.value] || appleImages.default} 
                     alt={`Apple ${cell.value}`} 
@@ -500,6 +501,7 @@ const ClassicMode = ({ onBack }) => {
                     draggable="false"
                     onDragStart={preventDrag}
                     onContextMenu={preventContextMenu}
+                    style={{ pointerEvents: 'none' }}
                   />
                 )}
               </div>
@@ -507,15 +509,35 @@ const ClassicMode = ({ onBack }) => {
           })
         )).flat()}
       </div>
-      
-      {gameOver && (
+        {gameOver && (
         <div className="game-over-overlay">
-          <div className="game-over-message">
-            <h2>게임 종료!</h2>
-            <p>최종 점수: {score}</p>
-            <p>제거한 사과: {applesRemoved}개</p>
-            <button onClick={initGame}>다시 시작</button>
-            <button onClick={onBack} className="back-button">메인으로 돌아가기</button>
+          <div className="game-over-modal">
+            <div className="game-over-header">
+              <div className="game-over-icon">🎯</div>
+              <h2 className="game-over-title">게임 완료!</h2>
+            </div>
+            
+            <div className="game-over-stats">
+              <div className="stat-item">
+                <div className="stat-value">{score.toLocaleString()}</div>
+                <div className="stat-label">최종 점수</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value">{applesRemoved}</div>
+                <div className="stat-label">제거한 사과</div>
+              </div>
+            </div>
+            
+            <div className="game-over-actions">
+              <button onClick={initGame} className="primary-button">
+                <span className="button-icon">🔄</span>
+                다시 시작
+              </button>
+              <button onClick={onBack} className="secondary-button">
+                <span className="button-icon">🏠</span>
+                메인으로
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -538,7 +560,7 @@ const ClassicMode = ({ onBack }) => {
                 ×
               </button>
             </div>
-            <Rankings onBack={handleCloseRanking} isModal={true} />
+            <Rankings onBack={handleCloseRanking} isModal={true} isOpen={showRanking} gameMode="classic" />
           </div>
         </div>
       )}

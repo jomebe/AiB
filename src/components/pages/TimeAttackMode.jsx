@@ -234,15 +234,15 @@ const TimeAttackMode = ({ onBack }) => {
               transition: 'transform 0.2s ease',
               border: cell.selected ? '3px solid #FF6B6B' : '2px solid transparent'
             }}
-          >
-            <img 
+          >            <img 
               src={appleImages[cell.value] || appleImages.default} 
               alt={`Apple ${cell.value}`} 
               className="apple-image" 
               style={{
                 width: '60px',
                 height: '60px',
-                objectFit: 'contain'
+                objectFit: 'contain',
+                pointerEvents: 'none'
               }}
             />
           </div>
