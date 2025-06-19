@@ -1140,6 +1140,6 @@ const PartnerMode = ({ onBack }) => {
             )}
         </div>
     );
-}; // PartnerMode 함수 끝
+ // PartnerMode 함수 끝
 
 export default PartnerMode;
