@@ -442,7 +442,7 @@ const GoldenAppleMode = ({ onBack }) => {
             ></div>
           </div>
           
-          <div className="apple-score-container">
+          <div className="apple-score-container2">
             <img src={AppleSVG} alt="Apple" className="apple-icon" />
             <span className="apple-count">{score}</span>
           </div>
@@ -530,6 +530,9 @@ const GoldenAppleMode = ({ onBack }) => {
       <button className="ranking-button" onClick={handleRankingClick}>
         <span className="trophy-icon">🏆</span>
       </button>
+      <button onClick={onBack} className="back-button">
+      돌아가기
+    </button>
     </div>
   );
 };

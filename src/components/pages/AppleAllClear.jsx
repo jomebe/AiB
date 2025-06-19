@@ -463,6 +463,9 @@ const AppleAllClear = ({ onBack }) => {
           </div>
         </div>
       )}
+      <button onClick={onBack} className="back-button">
+            돌아가기
+          </button>
     </div>
   );
 };

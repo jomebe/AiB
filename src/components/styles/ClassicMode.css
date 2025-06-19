@@ -152,6 +152,16 @@ html, body {
   padding: 0 10px;
 }
 
+.apple-score-container2 {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  padding: 0 10px;
+}
+
+
 .apple-icon {
   width: 20px;
   height: 20px;
