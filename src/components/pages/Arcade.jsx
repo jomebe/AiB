@@ -30,6 +30,7 @@ function Arcade({ onBack }) {
   };
   const renderModeSelection = () => {
     return (
+      <>
       <div className="mode-selection-container">
         <div 
           className="mode-card" 
@@ -78,6 +79,10 @@ function Arcade({ onBack }) {
           <div className="mode-title">Golden Apple</div>
         </div>
       </div>
+      <button onClick={onBack} className="back-button">
+        돌아가기
+      </button>
+      </>
     );
   };
   const renderGameContent = () => {
