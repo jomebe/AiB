@@ -192,10 +192,8 @@ const TimeAttackMode = ({ onBack }) => {
     selectionBoxRef.current.style.top = `${top}px`;
     selectionBoxRef.current.style.width = `${width}px`;
     selectionBoxRef.current.style.height = `${height}px`;
-  };
-  // 마우스 다운 이벤트
+  };  // 마우스 다운 이벤트
   const handleMouseDown = (e) => {
-    console.log('handleMouseDown called, button:', e.button, 'gameOver:', gameOver);
     if (e.button === 2 || gameOver) return;
     
     mouseIsDownRef.current = true;
@@ -204,7 +202,6 @@ const TimeAttackMode = ({ onBack }) => {
     const x = e.clientX - boardRect.left;
     const y = e.clientY - boardRect.top;
     
-    console.log('Setting isSelecting to true, startPos:', { x, y });
     setIsSelecting(true);
     setSelectedCells([]);
     setStartPos({ x, y });
@@ -247,10 +244,8 @@ const TimeAttackMode = ({ onBack }) => {
         if (boardCell) {
           selectedCellsData.push(boardCell);
         }
-      }
-    });
+      }    });
     
-    console.log('Found', selectedCellsData.length, 'selected cells:', selectedCellsData.map(c => c.id));
     setSelectedCells(selectedCellsData);
   };
 
@@ -269,48 +264,55 @@ const TimeAttackMode = ({ onBack }) => {
     }
   };  // 선택 검사
   const checkSelection = () => {
-    console.log('checkSelection called with selectedCells:', selectedCells);
-    if (selectedCells.length < 2) {
-      console.log('Not enough cells selected:', selectedCells.length);
-      return;
-    }
+    if (selectedCells.length < 2) return;
     
     const sum = selectedCells.reduce((total, cell) => total + cell.value, 0);
-    console.log('Sum calculated:', sum, 'Target:', TARGET_SUM);
     
     if (sum === TARGET_SUM) {
-      console.log('Valid selection! Removing cells:', selectedCells);
       setScore(prevScore => prevScore + selectedCells.length);
       
       // 애니메이션 효과
       selectedCells.forEach(cell => {
         const cellElement = document.querySelector(`[data-cell-id="${cell.id}"] .apple-image`);
-        console.log('Found cell element for', cell.id, ':', cellElement);
         if (cellElement) {
           cellElement.classList.add('apple-explode');
         }
       });
 
-      // 애니메이션이 끝나면 사과 값만 변경 (보드 구조는 유지)
-      setTimeout(() => {        setGameBoard(prevBoard => {
+      // 애니메이션이 끝나면 새로운 사과로 교체
+      setTimeout(() => {
+        setGameBoard(prevBoard => {
           const newBoard = prevBoard.map(row => [...row]);
+          
+          // 선택된 셀들에 새로운 랜덤 값 할당
           selectedCells.forEach(cell => {
             const [x, y] = cell.id.split('-').map(Number);
             if (newBoard[y] && newBoard[y][x]) {
+              // 새로운 랜덤 사과 값 생성
               newBoard[y][x] = {
                 ...newBoard[y][x],
-                value: Math.floor(Math.random() * 9) + 1
+                value: Math.floor(Math.random() * 9) + 1,
+                selected: false
               };
             }
           });
           
-          // 새 보드에서 가능한 움직임 체크
-          setTimeout(() => {
-            checkForPossibleMoves(newBoard);
-          }, 100);
-          
           return newBoard;
         });
+        
+        // 애니메이션 클래스 제거
+        selectedCells.forEach(cell => {
+          const cellElement = document.querySelector(`[data-cell-id="${cell.id}"] .apple-image`);
+          if (cellElement) {
+            cellElement.classList.remove('apple-explode');
+          }
+        });
+        
+        // 새 보드에서 가능한 움직임 체크
+        setTimeout(() => {
+          checkForPossibleMoves();
+        }, 100);
+        
       }, 250);
       
       setApplesRemoved(prev => prev + selectedCells.length);
