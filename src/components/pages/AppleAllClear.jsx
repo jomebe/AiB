@@ -355,7 +355,7 @@ const AppleAllClear = ({ onBack }) => {
             ></div>
           </div>
           
-          <div className="apple-score-container">
+          <div className="apple-score-container2">
             <img src={AppleSVG} alt="Apple" className="apple-icon" />
             <span className="apple-count">{score}</span>
           </div>
