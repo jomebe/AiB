@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, onValue, push, remove, onDisconnect, serverTimestamp, off, get } from 'firebase/database';
-import '../styles/ClassicMode.css';
 import '../styles/PartnerMode.css';
 import AppleDefault from '../../images/appleDefault.svg';
 import Apple1 from '../../images/apple1.svg';
@@ -13,10 +12,6 @@ import Apple6 from '../../images/apple6.svg';
 import Apple7 from '../../images/apple7.svg';
 import Apple8 from '../../images/apple8.svg';
 import Apple9 from '../../images/apple9.svg';
-import AuthService from '../../utils/auth';
-import ScoreService from '../../utils/scoreService';
-import Rankings from '../Rankings/Rankings';
-import Login from '../Login/Login';
 
 // Firebase 설정
 const firebaseConfig = {
@@ -33,6 +28,7 @@ const firebaseConfig = {
 // Firebase 초기화 (안전하게)
 let app;
 let database;
+
 try {
     app = initializeApp(firebaseConfig);
     database = getDatabase(app);
@@ -42,12 +38,13 @@ try {
 
 const PartnerMode = ({ onBack }) => {
     console.log('PartnerMode component loaded'); // 디버깅용
-      // 게임 설정
-    const BOARD_SIZE_X = 17;
-    const BOARD_SIZE_Y = 10;
+    
+    // 게임 설정
+    const BOARD_SIZE_X = 34;
+    const BOARD_SIZE_Y = 20;
     const TARGET_SUM = 10;
     const MAX_APPLE_VALUE = 9;
-    const TIMER_DURATION = 60; // 1분
+    const TIMER_DURATION = 120; // 2분
     const MATCHING_TIMEOUT = 15000; // 15초 매칭 타임아웃
 
     // 숫자별 사과 이미지 매핑
@@ -77,14 +74,11 @@ const PartnerMode = ({ onBack }) => {
     const [selectedCells, setSelectedCells] = useState([]);
     const [partnerSelectedCells, setPartnerSelectedCells] = useState([]);
     const [isSelecting, setIsSelecting] = useState(false);
-    const [selectionBox, setSelectionBox] = useState(null);    const [isHost, setIsHost] = useState(false);
+    const [selectionBox, setSelectionBox] = useState(null);
+    const [isHost, setIsHost] = useState(false);
     const [otherPlayerName, setOtherPlayerName] = useState('');
     const [otherPlayerCursor, setOtherPlayerCursor] = useState({ x: 0, y: 0 });
-    const [currentUser, setCurrentUser] = useState(null);
-    const [showLogin, setShowLogin] = useState(false);
-    const [showRankings, setShowRankings] = useState(false);
-    const [gameStartTime, setGameStartTime] = useState(null);
-    
+
     // refs
     const gameBoardRef = useRef(null);
     const timerRef = useRef(null);
@@ -112,37 +106,42 @@ const PartnerMode = ({ onBack }) => {
     // 팝 사운드 생성
     const createPopSound = useCallback(() => {
         if (!audioContext.current) return;
-        
+
         const oscillator = audioContext.current.createOscillator();
         const gainNode = audioContext.current.createGain();
-        
+
         oscillator.type = 'sine';
         oscillator.frequency.setValueAtTime(800, audioContext.current.currentTime);
         oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.current.currentTime + 0.1);
-        
+
         gainNode.gain.setValueAtTime(0, audioContext.current.currentTime);
         gainNode.gain.linearRampToValueAtTime(0.35, audioContext.current.currentTime + 0.01);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.current.currentTime + 0.1);
-        
+
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.current.destination);
-        
+
         oscillator.start();
         oscillator.stop(audioContext.current.currentTime + 0.1);
-    }, []);    // 게임 보드 생성
+    }, []);
+
+    // 게임 보드 생성
     const generateBoard = useCallback(() => {
         console.log('generateBoard called! BOARD_SIZE_X:', BOARD_SIZE_X, 'BOARD_SIZE_Y:', BOARD_SIZE_Y);
-        // 클래식 모드와 동일한 구조로 생성 (객체 형태로)
-        const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
-            Array(BOARD_SIZE_X).fill().map(() => ({
-                value: getRandomAppleValue(),
-                isVisible: true
-            }))
-        );
+        const newBoard = [];
+        for (let i = 0; i < BOARD_SIZE_Y; i++) {
+            const row = [];
+            for (let j = 0; j < BOARD_SIZE_X; j++) {
+                row.push(getRandomAppleValue());
+            }
+            newBoard.push(row);
+        }
 
         // 해결책 보장
         ensureSolution(newBoard);
         console.log('Generated board:', newBoard.length, 'rows x', newBoard[0]?.length, 'cols');
+        console.log('First 5 rows:', newBoard.slice(0, 5));
+        console.log('Last 5 rows:', newBoard.slice(-5));
         return newBoard;
     }, []);
 
@@ -151,25 +150,23 @@ const PartnerMode = ({ onBack }) => {
         if (!hasSolution(board)) {
             createSolution(board);
         }
-    };    // 해결책 존재 확인
+    };
+
+    // 해결책 존재 확인
     const hasSolution = (board) => {
         // 가로 검사
         for (let i = 0; i < BOARD_SIZE_Y; i++) {
             for (let j = 0; j < BOARD_SIZE_X - 1; j++) {
-                if (board[i][j].isVisible && board[i][j + 1].isVisible && 
-                    board[i][j].value + board[i][j + 1].value === TARGET_SUM) return true;
-                if (j < BOARD_SIZE_X - 2 && board[i][j].isVisible && board[i][j + 1].isVisible && board[i][j + 2].isVisible &&
-                    board[i][j].value + board[i][j + 1].value + board[i][j + 2].value === TARGET_SUM) return true;
+                if (board[i][j] + board[i][j + 1] === TARGET_SUM) return true;
+                if (j < BOARD_SIZE_X - 2 && board[i][j] + board[i][j + 1] + board[i][j + 2] === TARGET_SUM) return true;
             }
         }
 
         // 세로 검사
         for (let j = 0; j < BOARD_SIZE_X; j++) {
             for (let i = 0; i < BOARD_SIZE_Y - 1; i++) {
-                if (board[i][j].isVisible && board[i + 1][j].isVisible &&
-                    board[i][j].value + board[i + 1][j].value === TARGET_SUM) return true;
-                if (i < BOARD_SIZE_Y - 2 && board[i][j].isVisible && board[i + 1][j].isVisible && board[i + 2][j].isVisible &&
-                    board[i][j].value + board[i + 1][j].value + board[i + 2][j].value === TARGET_SUM) return true;
+                if (board[i][j] + board[i + 1][j] === TARGET_SUM) return true;
+                if (i < BOARD_SIZE_Y - 2 && board[i][j] + board[i + 1][j] + board[i + 2][j] === TARGET_SUM) return true;
             }
         }
 
@@ -179,25 +176,21 @@ const PartnerMode = ({ onBack }) => {
                 for (let i = 0; i <= BOARD_SIZE_Y - height; i++) {
                     for (let j = 0; j <= BOARD_SIZE_X - width; j++) {
                         let sum = 0;
-                        let allVisible = true;
                         for (let di = 0; di < height; di++) {
                             for (let dj = 0; dj < width; dj++) {
-                                if (!board[i + di][j + dj].isVisible) {
-                                    allVisible = false;
-                                    break;
-                                }
-                                sum += board[i + di][j + dj].value;
+                                sum += board[i + di][j + dj];
                             }
-                            if (!allVisible) break;
                         }
-                        if (allVisible && sum === TARGET_SUM) return true;
+                        if (sum === TARGET_SUM) return true;
                     }
                 }
             }
         }
 
         return false;
-    };    // 해결책 생성
+    };
+
+    // 해결책 생성
     const createSolution = (board) => {
         const startY = Math.floor(Math.random() * BOARD_SIZE_Y);
         const startX = Math.floor(Math.random() * (BOARD_SIZE_X - 2));
@@ -208,13 +201,10 @@ const PartnerMode = ({ onBack }) => {
             const maxVal = Math.min(MAX_APPLE_VALUE, remainingSum - (len - 1 - i));
             const minVal = Math.max(1, remainingSum - (len - 1 - i) * MAX_APPLE_VALUE);
             const val = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
-            board[startY][startX + i].value = val;
-            board[startY][startX + i].isVisible = true;
+            board[startY][startX + i] = val;
             remainingSum -= val;
         }
-        
-        board[startY][startX + len - 1].value = remainingSum;
-        board[startY][startX + len - 1].isVisible = true;
+        board[startY][startX + len - 1] = remainingSum;
     };
 
     // Firebase 데이터 초기화 (모든 게임과 플레이어 데이터 삭제)
@@ -453,7 +443,7 @@ const PartnerMode = ({ onBack }) => {
         if (!gameId.current) return;
 
         gameRef.current = ref(database, `games/${gameId.current}`);
-        
+
         // 게임 데이터 변경 리스너
         onValue(gameRef.current, (snapshot) => {
             const gameData = snapshot.val();
@@ -573,7 +563,6 @@ const PartnerMode = ({ onBack }) => {
         setSelectedCells([]);
         setPartnerSelectedCells([]);
         setGameBoard([]);
-
         clearInterval(timerRef.current);
         clearTimeout(matchingTimer.current);
 
@@ -652,7 +641,6 @@ const PartnerMode = ({ onBack }) => {
 
         startPos.current = { x, y };
         setIsSelecting(true);
-
         setSelectionBox({
             left: x,
             top: y,
@@ -704,7 +692,9 @@ const PartnerMode = ({ onBack }) => {
         if (gameId.current) {
             set(ref(database, `games/${gameId.current}/selections/${playerId.current}`), selectedCells);
         }
-    };    // 선택된 셀 업데이트
+    };
+
+    // 선택된 셀 업데이트
     const updateSelectedCells = (left, top, width, height) => {
         const cells = [];
         const cellWidth = gameBoardRef.current.offsetWidth / BOARD_SIZE_X;
@@ -717,18 +707,20 @@ const PartnerMode = ({ onBack }) => {
 
         for (let row = Math.max(0, startRow); row <= Math.min(BOARD_SIZE_Y - 1, endRow); row++) {
             for (let col = Math.max(0, startCol); col <= Math.min(BOARD_SIZE_X - 1, endCol); col++) {
-                if (gameBoard[row] && gameBoard[row][col] && gameBoard[row][col].isVisible) {
+                if (gameBoard[row] && gameBoard[row][col] !== 0) {
                     cells.push({ row, col });
                 }
             }
         }
 
         setSelectedCells(cells);
-    };    // 선택 확인
+    };
+
+    // 선택 확인
     const checkSelection = async () => {
         if (selectedCells.length === 0) return;
 
-        const sum = selectedCells.reduce((total, { row, col }) => total + gameBoard[row][col].value, 0);
+        const sum = selectedCells.reduce((total, { row, col }) => total + gameBoard[row][col], 0);
 
         if (sum === TARGET_SUM) {
             // 성공 처리
@@ -736,10 +728,10 @@ const PartnerMode = ({ onBack }) => {
             const newScore = score + selectedCells.length;
             setScore(newScore);
 
-            // 보드 업데이트 - 클래식 모드처럼 isVisible을 false로 설정
-            const newBoard = gameBoard.map(row => [...row]);
+            // 보드 업데이트
+            const newBoard = [...gameBoard];
             selectedCells.forEach(({ row, col }) => {
-                newBoard[row][col].isVisible = false;
+                newBoard[row][col] = 0;
             });
             setGameBoard(newBoard);
 
@@ -822,9 +814,14 @@ const PartnerMode = ({ onBack }) => {
                 </div>
                 <div className="status-message">{statusMessage}</div>
                 <div className="player-count">접속자 수: {playerCount}명</div>
+                <button onClick={onBack} style={{ marginTop: '20px', padding: '10px 20px' }}>
+                    뒤로가기
+                </button>
             </div>
         </div>
-    );    // 게임 화면 렌더링
+    );
+
+    // 게임 화면 렌더링
     const renderGame = () => (
         <div className="game-container">
             <div className="header">
@@ -850,38 +847,33 @@ const PartnerMode = ({ onBack }) => {
             </div>
 
             <div className="game-area">
-                <div className="timer-score-sidebar">
-                    <div className="timer-display">
-                        <span className="timer-value">{formatTime(remainingTime)}</span>
-                    </div>
-                </div>
-
                 <div
-                    className="game-board partner-mode"
+                    className="game-board"
                     ref={gameBoardRef}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={() => setIsSelecting(false)}
-                >                    {gameBoard.map((row, rowIndex) =>
+                >
+                    {gameBoard.map((row, rowIndex) =>
                         row.map((cell, colIndex) => (
                             <div
                                 key={`${rowIndex}-${colIndex}`}
-                                className={`cell ${!cell.isVisible ? 'empty' : 'apple'} ${
+                                className={`cell ${cell === 0 ? 'empty' : 'apple'} ${
                                     selectedCells.some(({ row, col }) => row === rowIndex && col === colIndex) ? 'selected' : ''
                                 } ${
                                     partnerSelectedCells.some(({ row, col }) => row === rowIndex && col === colIndex) ? 'partner-selected' : ''
                                 }`}
                             >
-                                {cell.isVisible && (
+                                {cell > 0 && (
                                     <img
-                                        src={appleImages[cell.value] || appleImages.default}
-                                        alt={`Apple ${cell.value}`}
+                                        src={appleImages[cell] || appleImages.default}
+                                        alt={`Apple ${cell}`}
                                         className="apple-image"
                                         draggable={false}
                                     />
                                 )}
-                                <span className="cell-number">{cell.isVisible ? cell.value : ''}</span>
+                                <span className="cell-number">{cell || ''}</span>
                             </div>
                         ))
                     )}
@@ -896,7 +888,15 @@ const PartnerMode = ({ onBack }) => {
                                 height: selectionBox.height
                             }}
                         />
-                    )}                </div>
+                    )}
+                </div>
+
+                <div className="timer-container">
+                    <div
+                        className="timer-bar"
+                        style={{ height: `${(remainingTime / TIMER_DURATION) * 100}%` }}
+                    />
+                </div>
             </div>
         </div>
     );
@@ -913,8 +913,10 @@ const PartnerMode = ({ onBack }) => {
         >
             <span className="player-name">{otherPlayerName}</span>
         </div>
-    );    return (
-        <div className="classic-mode-container">
+    );
+
+    return (
+        <div className="partner-mode">
             <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'red', color: 'white', padding: '5px', zIndex: 9999 }}>
                 PartnerMode Loaded - State: {gameState}
             </div>

@@ -1,13 +1,14 @@
 import React from 'react';
 import Tetple from './Tetple';
-import PartnerModeSimple from './PartnerModeSimple';
+import PartnerMode from './PartnerMode';
 import AppleAllClear from './AppleAllClear';
 
 const ArcadeMode = ({ mode, onBack }) => {
   switch(mode) {
     case 'tetple':
-      return <Tetple onBack={onBack} />;    case 'partner':
-      return <PartnerModeSimple onBack={onBack} />;
+      return <Tetple onBack={onBack} />;
+    case 'partner':
+      return <PartnerMode onBack={onBack} />;
     case 'allClear':
       return <AppleAllClear onBack={onBack} />;
     default:

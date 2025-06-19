@@ -6,6 +6,80 @@
   min-height: 100vh;
   background: #DDF5D1;
   font-family: "Wanted Sans Variable", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  padding: 2rem;
+}
+
+.main-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logged-in-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.welcome-text {
+  font-weight: 500;
+  color: #374151;
+}
+
+.login-button,
+.logout-button,
+.rankings-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-button {
+  background: #3b82f6;
+  color: white;
+}
+
+.login-button:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
+.logout-button {
+  background: #ef4444;
+  color: white;
+}
+
+.logout-button:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+.rankings-button {
+  background: #f59e0b;
+  color: white;
+}
+
+.rankings-button:hover {
+  background: #d97706;
+  transform: translateY(-2px);
 }
 
 .main-title {
@@ -19,8 +93,12 @@
 }
 
 .game-mode-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 24px;
+  max-width: 1200px;
+  width: 100%;
+  margin-top: 2rem;
 }
 
 .game-mode {

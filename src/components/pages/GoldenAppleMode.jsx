@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/ClassicMode.css';
 import AppleDefault from '../../images/appleDefault.svg';
-import GoldenApple from '../../images/goldenapple.svg';
+import Apple1 from '../../images/apple1.svg';
+import Apple2 from '../../images/apple2.svg';
+import Apple3 from '../../images/apple3.svg';
+import Apple4 from '../../images/apple4.svg';
+import Apple5 from '../../images/apple5.svg';
+import Apple6 from '../../images/apple6.svg';
+import Apple7 from '../../images/apple7.svg';
+import Apple8 from '../../images/apple8.svg';
+import Apple9 from '../../images/apple9.svg';
 import GoldenApple1 from '../../images/goldenapple1.svg';
 import GoldenApple2 from '../../images/goldenapple2.svg';
 import GoldenApple3 from '../../images/goldenapple3.svg';
@@ -13,15 +21,6 @@ import GoldenApple8 from '../../images/goldenapple8.svg';
 import GoldenApple9 from '../../images/goldenapple9.svg';
 import BugApple from '../../images/bugapple.svg';
 import RainbowApple from '../../images/rainbowapple.svg';
-import Apple1 from '../../images/apple1.svg';
-import Apple2 from '../../images/apple2.svg';
-import Apple3 from '../../images/apple3.svg';
-import Apple4 from '../../images/apple4.svg';
-import Apple5 from '../../images/apple5.svg';
-import Apple6 from '../../images/apple6.svg';
-import Apple7 from '../../images/apple7.svg';
-import Apple8 from '../../images/apple8.svg';
-import Apple9 from '../../images/apple9.svg';
 import AppleSVG from '../../images/apples.svg';
 
 const GoldenAppleMode = ({ onBack }) => {
@@ -30,6 +29,14 @@ const GoldenAppleMode = ({ onBack }) => {
   const BOARD_SIZE_Y = 10; // 세로 칸 수
   const TARGET_SUM = 10;
   const GAME_TIME = 120; // 2분 (초 단위)
+  
+  // 사과 타입 정의
+  const APPLE_TYPES = {
+    NORMAL: 'normal',
+    GOLDEN: 'golden',
+    RAINBOW: 'rainbow',
+    BLACK: 'black'
+  };
   
   // 게임 상태
   const [gameBoard, setGameBoard] = useState([]);
@@ -40,190 +47,188 @@ const GoldenAppleMode = ({ onBack }) => {
   const [gameOver, setGameOver] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
   const [applesRemoved, setApplesRemoved] = useState(0);
+  const [showRanking, setShowRanking] = useState(false);
   
   const gameBoardRef = useRef(null);
   const selectionBoxRef = useRef(null);
   const mouseIsDownRef = useRef(false);
   const timerRef = useRef(null);
-
+  
   // 일반 사과 이미지 매핑
-  const appleImages = {
-    1: Apple1,
-    2: Apple2,
-    3: Apple3,
-    4: Apple4,
-    5: Apple5,
-    6: Apple6,
-    7: Apple7,
-    8: Apple8,
-    9: Apple9,
+  const normalAppleImages = {
+    1: Apple1, 2: Apple2, 3: Apple3, 4: Apple4, 5: Apple5,
+    6: Apple6, 7: Apple7, 8: Apple8, 9: Apple9,
     default: AppleDefault
   };
+  
   // 황금 사과 이미지 매핑
   const goldenAppleImages = {
-    1: GoldenApple1,
-    2: GoldenApple2,
-    3: GoldenApple3,
-    4: GoldenApple4,
-    5: GoldenApple5,
-    6: GoldenApple6,
-    7: GoldenApple7,
-    8: GoldenApple8,
-    9: GoldenApple9
+    1: GoldenApple1, 2: GoldenApple2, 3: GoldenApple3,
+    4: GoldenApple4, 5: GoldenApple5, 6: GoldenApple6,
+    7: GoldenApple7, 8: GoldenApple8, 9: GoldenApple9
   };
-
-  // 게임 보드 초기화
-  const initializeBoard = () => {
-    const board = [];
-    let goldenAppleCount = 0;
-    let bugAppleCount = 0;
-    let rainbowAppleCount = 0;
-    
-    for (let y = 0; y < BOARD_SIZE_Y; y++) {
-      const row = [];
-      for (let x = 0; x < BOARD_SIZE_X; x++) {
-        let cellType = 'normal';
-        let value = Math.floor(Math.random() * 9) + 1;
-        
-        // 황금사과 5개 배치 (확률적으로)
-        if (goldenAppleCount < 5 && Math.random() < 0.05) {
-          cellType = 'golden';
-          goldenAppleCount++;
-        }
-        // 썩은사과 3개 배치
-        else if (bugAppleCount < 3 && Math.random() < 0.03) {
-          cellType = 'bug';
-          value = 0; // 썩은사과는 값이 없음
-        }
-        // 무지개사과 2개 배치
-        else if (rainbowAppleCount < 2 && Math.random() < 0.02) {
-          cellType = 'rainbow';
-          value = 0; // 무지개사과는 합칠 때 결정됨
-        }
-        
-        row.push({
-          id: `${x}-${y}`,
-          value: value,
-          type: cellType,
-          row: y,
-          col: x,
-          isVisible: true
-        });
-      }
-      board.push(row);
-    }
-    
-    // 남은 특수 사과들을 랜덤 위치에 강제 배치
-    while (goldenAppleCount < 5) {
-      const x = Math.floor(Math.random() * BOARD_SIZE_X);
-      const y = Math.floor(Math.random() * BOARD_SIZE_Y);
-      if (board[y][x].type === 'normal') {
-        board[y][x].type = 'golden';
-        goldenAppleCount++;
-      }
-    }
-    
-    while (bugAppleCount < 3) {
-      const x = Math.floor(Math.random() * BOARD_SIZE_X);
-      const y = Math.floor(Math.random() * BOARD_SIZE_Y);
-      if (board[y][x].type === 'normal') {
-        board[y][x].type = 'bug';
-        board[y][x].value = 0;
-        bugAppleCount++;
-      }
-    }
-    
-    while (rainbowAppleCount < 2) {
-      const x = Math.floor(Math.random() * BOARD_SIZE_X);
-      const y = Math.floor(Math.random() * BOARD_SIZE_Y);
-      if (board[y][x].type === 'normal') {
-        board[y][x].type = 'rainbow';
-        board[y][x].value = 0;
-        rainbowAppleCount++;
-      }
-    }
-    
-    setGameBoard(board);
-  };
-
-  // 게임 보드에서 사과 이미지 가져오기
+  
+  // 사과 이미지 가져오기
   const getAppleImage = (cell) => {
-    switch (cell.type) {
-      case 'golden':
-        return goldenAppleImages[cell.value] || GoldenApple1;
-      case 'bug':
-        return BugApple;
-      case 'rainbow':
-        return RainbowApple;
-      default:
-        return appleImages[cell.value] || appleImages.default;
+    if (cell.type === APPLE_TYPES.RAINBOW) {
+      return RainbowApple;
+    } else if (cell.type === APPLE_TYPES.BLACK) {
+      return BugApple;
+    } else if (cell.type === APPLE_TYPES.GOLDEN) {
+      return goldenAppleImages[cell.value] || goldenAppleImages[1];
+    } else {
+      return normalAppleImages[cell.value] || normalAppleImages.default;
     }
   };
-  // 선택된 셀들의 합 계산 (개선된 무지개 사과 처리)
-  const calculateSelectionSum = (cells) => {
-    let sum = 0;
-    let rainbowCount = 0;
-    let hasBug = false;
-    let normalSum = 0;
+  
+  // 드래그 방지 함수들
+  const preventDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+  
+  const preventContextMenu = (e) => {
+    e.preventDefault();
+    return false;
+  };
+
+  const handleRankingClick = () => {
+    setShowRanking(true);
+    console.log('랭킹 조회 요청');
+  };
+  
+  // 전역 마우스 업 이벤트 핸들러
+  const handleGlobalMouseUp = (e) => {
+    mouseIsDownRef.current = false;
     
-    cells.forEach(cell => {
-      if (cell.type === 'bug') {
-        hasBug = true;
-      } else if (cell.type === 'rainbow') {
-        rainbowCount++;
-      } else {
-        normalSum += cell.value;
-      }
-    });
-    
-    // 썩은 사과가 포함되면 조합 불가
-    if (hasBug) {
-      return -1;
+    if (isSelecting) {
+      handleMouseUp(e);
     }
+  };
+  
+  // 초기화
+  useEffect(() => {
+    initGame();
     
-    // 무지개 사과가 포함된 경우
-    if (rainbowCount > 0) {
-      // 각 무지개 사과가 필요한 값을 계산
-      let remainingTarget = TARGET_SUM - normalSum;
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    document.addEventListener('contextmenu', preventContextMenu);
+    
+    return () => {
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('contextmenu', preventContextMenu);
       
-      // 무지개 사과가 여러개인 경우 균등 분배
-      if (rainbowCount === 1) {
-        if (remainingTarget >= 1 && remainingTarget <= 9) {
-          return TARGET_SUM;
-        }
-      } else if (rainbowCount === 2) {
-        // 두 무지개 사과로 나머지를 만들 수 있는지 확인
-        for (let i = 1; i <= 9; i++) {
-          for (let j = 1; j <= 9; j++) {
-            if (i + j === remainingTarget) {
-              return TARGET_SUM;
-            }
-          }
-        }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
       }
-      return normalSum; // 적절한 값으로 맞출 수 없음
+    };
+  }, []);
+    const initGame = () => {
+    setScore(0);
+    setSelectedCells([]);
+    setGameOver(false);
+    setTimeLeft(GAME_TIME);
+    setApplesRemoved(0);
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
     }
     
-    return normalSum;
-  };
-
-  // 점수 계산
-  const calculateScore = (cells) => {
-    let baseScore = cells.length;
-    let goldenAppleCount = 0;
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 1) {
+          clearInterval(timerRef.current);
+          setGameOver(true);
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
     
-    cells.forEach(cell => {
-      if (cell.type === 'golden') {
-        goldenAppleCount++;
+    generateBoard();
+  };
+    // 게임 보드 생성
+  const generateBoard = () => {
+    const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
+      Array(BOARD_SIZE_X).fill(null)
+    );
+    
+    // 전체 셀 수
+    const totalCells = BOARD_SIZE_X * BOARD_SIZE_Y; // 150개
+    
+    // 특수 사과 개수 설정
+    const specialApples = [
+      ...Array(5).fill({ type: APPLE_TYPES.GOLDEN, count: 5 }),   // 황금사과 5개
+      ...Array(5).fill({ type: APPLE_TYPES.RAINBOW, count: 5 }),  // 무지개사과 5개
+      ...Array(5).fill({ type: APPLE_TYPES.BLACK, count: 5 })     // 썩은사과 5개
+    ];
+    
+    // 모든 위치 배열 생성
+    const positions = [];
+    for (let row = 0; row < BOARD_SIZE_Y; row++) {
+      for (let col = 0; col < BOARD_SIZE_X; col++) {
+        positions.push({ row, col });
       }
-    });
+    }
     
-    // 황금사과 하나당 3점, 일반사과는 1점
-    return baseScore + (goldenAppleCount * 2); // 기본 1점 + 황금사과당 추가 2점 = 총 3점
+    // 위치 섞기
+    for (let i = positions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [positions[i], positions[j]] = [positions[j], positions[i]];
+    }
+    
+    let positionIndex = 0;
+    
+    // 황금사과 5개 배치
+    for (let i = 0; i < 5; i++) {
+      const pos = positions[positionIndex++];
+      newBoard[pos.row][pos.col] = {
+        type: APPLE_TYPES.GOLDEN,
+        value: Math.floor(Math.random() * 9) + 1,
+        isVisible: true,
+        isSelectable: true
+        };
+      }
+      
+    // 무지개사과 5개 배치
+    for (let i = 0; i < 5; i++) {
+      const pos = positions[positionIndex++];
+      newBoard[pos.row][pos.col] = {
+        type: APPLE_TYPES.RAINBOW,
+        value: 0,
+        isVisible: true,
+        isSelectable: true
+      };
+    }
+    
+    // 썩은사과(검정사과) 5개 배치
+    for (let i = 0; i < 5; i++) {
+      const pos = positions[positionIndex++];
+      newBoard[pos.row][pos.col] = {
+        type: APPLE_TYPES.BLACK,
+        value: 0,
+        isVisible: true,
+        isSelectable: false
+      };
+    }
+    
+    // 나머지 위치에 일반 사과 배치
+    for (let i = positionIndex; i < positions.length; i++) {
+      const pos = positions[i];
+      newBoard[pos.row][pos.col] = {
+        type: APPLE_TYPES.NORMAL,
+        value: Math.floor(Math.random() * 9) + 1,
+        isVisible: true,
+        isSelectable: true
+      };
+    }
+    
+    setGameBoard(newBoard);
   };
-
-  // 마우스 드래그 이벤트들 (ClassicMode와 동일)
+  
+  // 마우스 다운 이벤트
   const handleMouseDown = (e) => {
+    if (e.button === 2) return;
     if (gameOver) return;
     
     mouseIsDownRef.current = true;
@@ -241,7 +246,8 @@ const GoldenAppleMode = ({ onBack }) => {
     e.preventDefault();
     e.stopPropagation();
   };
-
+  
+  // 마우스 이동 이벤트
   const handleMouseMove = (e) => {
     if (!isSelecting || !mouseIsDownRef.current) return;
     
@@ -255,7 +261,24 @@ const GoldenAppleMode = ({ onBack }) => {
     e.preventDefault();
     e.stopPropagation();
   };
-
+  
+  // 선택 상태 완전 정리
+  const cleanupSelection = () => {
+    document.querySelectorAll('.apple-cell').forEach(cell => {
+      cell.classList.remove('selected');
+    });
+    
+    if (selectionBoxRef.current) {
+      selectionBoxRef.current.remove();
+      selectionBoxRef.current = null;
+    }
+    
+    mouseIsDownRef.current = false;
+    setIsSelecting(false);
+    setSelectedCells([]);
+  };
+  
+  // 마우스 업 이벤트
   const handleMouseUp = (e) => {
     if (!isSelecting) return;
     
@@ -267,12 +290,15 @@ const GoldenAppleMode = ({ onBack }) => {
       e.stopPropagation();
     }
   };
-
+  
+  // 마우스 리브 이벤트
   const handleMouseLeave = (e) => {
     if (isSelecting) {
       handleMouseUp(e);
     }
-  };  // 선택 상자 생성
+  };
+  
+  // 선택 상자 생성
   const createSelectionBox = (x, y) => {
     const selectionBox = document.createElement('div');
     selectionBox.className = 'selection-box';
@@ -284,7 +310,7 @@ const GoldenAppleMode = ({ onBack }) => {
     gameBoardRef.current.appendChild(selectionBox);
     selectionBoxRef.current = selectionBox;
   };
-
+  
   // 선택 상자 업데이트
   const updateSelectionBox = (x, y) => {
     if (!selectionBoxRef.current) return;
@@ -301,65 +327,102 @@ const GoldenAppleMode = ({ onBack }) => {
     selectionBoxRef.current.style.width = `${width}px`;
     selectionBoxRef.current.style.height = `${height}px`;
   };
-
-  // 선택된 셀들 업데이트
+  
+  // 선택된 셀 업데이트
   const updateSelectedCells = () => {
     if (!selectionBoxRef.current) return;
     
     const selectionRect = selectionBoxRef.current.getBoundingClientRect();
-    const boardRect = gameBoardRef.current.getBoundingClientRect();
+    const cells = document.querySelectorAll('.apple-cell');
+    const selectedCellsData = [];
     
-    const relativeRect = {
-      left: selectionRect.left - boardRect.left,
-      top: selectionRect.top - boardRect.top,
-      right: selectionRect.right - boardRect.left,
-      bottom: selectionRect.bottom - boardRect.top
-    };
-    
-    const newSelectedCells = [];
-    
-    gameBoard.forEach(row => {
-      row.forEach(cell => {
-        if (!cell.isVisible) return;
+    cells.forEach(cell => {
+      cell.classList.remove('selected');
+      
+      const cellRect = cell.getBoundingClientRect();
+      
+      const cellCenterX = cellRect.left + cellRect.width / 2;
+      const cellCenterY = cellRect.top + cellRect.height / 2;
+      
+      if (
+        cellCenterX >= selectionRect.left &&
+        cellCenterX <= selectionRect.right &&
+        cellCenterY >= selectionRect.top &&
+        cellCenterY <= selectionRect.bottom
+      ) {
+        const row = parseInt(cell.dataset.row);
+        const col = parseInt(cell.dataset.col);
+        const cellData = gameBoard[row]?.[col];
         
-        const cellElement = document.querySelector(`.board-cell[data-row="${cell.row}"][data-col="${cell.col}"]`);
-        if (cellElement) {
-          const cellRect = cellElement.getBoundingClientRect();
-          const relativeCellRect = {
-            left: cellRect.left - boardRect.left,
-            top: cellRect.top - boardRect.top,
-            right: cellRect.right - boardRect.left,
-            bottom: cellRect.bottom - boardRect.top
-          };
+        // 검정 사과(방벽)는 선택 불가
+        if (cellData && cellData.isSelectable) {
+          cell.classList.add('selected');
           
-          const isOverlapping = !(
-            relativeRect.right < relativeCellRect.left ||
-            relativeRect.left > relativeCellRect.right ||
-            relativeRect.bottom < relativeCellRect.top ||
-            relativeRect.top > relativeCellRect.bottom
-          );
-          
-          if (isOverlapping) {
-            newSelectedCells.push(cell);
-            cellElement.classList.add('selected');
-          } else {
-            cellElement.classList.remove('selected');
-          }
+          selectedCellsData.push({
+            row: row,
+            col: col,
+            value: parseInt(cell.dataset.value) || 0,
+            type: cell.dataset.type,
+            cellData: cellData
+          });
         }
-      });
+      }
     });
     
-    setSelectedCells(newSelectedCells);
+    setSelectedCells(selectedCellsData);
   };
-  // 선택 확인 및 처리
+    // 선택 검사 - 골든 애플 모드 특별 규칙
   const checkSelection = () => {
-    if (selectedCells.length === 0) return;
+    if (selectedCells.length < 2) return;
     
-    const sum = calculateSelectionSum(selectedCells);
+    // 무지개 사과가 있는지 확인
+    const rainbowApples = selectedCells.filter(cell => cell.type === APPLE_TYPES.RAINBOW);
+    const normalApples = selectedCells.filter(cell => cell.type === APPLE_TYPES.NORMAL);
+    const goldenApples = selectedCells.filter(cell => cell.type === APPLE_TYPES.GOLDEN);
     
-    if (sum === TARGET_SUM && selectedCells.length > 1) {
-      const earnedScore = calculateScore(selectedCells);
-      setScore(prevScore => prevScore + earnedScore);
+    let isValidSelection = false;
+    let totalScore = 0;
+    
+    // 무지개 사과가 포함된 경우
+    if (rainbowApples.length > 0) {
+      // 무지개 사과 + 다른 사과들의 합이 10 이하여야 함
+      const otherApplesSum = normalApples.reduce((sum, cell) => sum + cell.cellData.value, 0) +
+                           goldenApples.reduce((sum, cell) => sum + cell.cellData.value, 0);
+        if (otherApplesSum <= TARGET_SUM && otherApplesSum > 0) {
+        isValidSelection = true;
+        // 점수 계산: 일반사과는 1점, 황금사과는 3점, 무지개사과는 1점
+        const normalScore = normalApples.length * 1;
+        const goldenScore = goldenApples.length * 3;
+        const rainbowScore = rainbowApples.length * 1;
+        totalScore = normalScore + goldenScore + rainbowScore;
+      }
+    }
+    // 일반적인 경우 (무지개 사과 없음)
+    else {
+      const sum = normalApples.reduce((sum, cell) => sum + cell.cellData.value, 0) +
+                 goldenApples.reduce((sum, cell) => sum + cell.cellData.value, 0);
+        if (sum === TARGET_SUM) {
+        isValidSelection = true;
+        // 점수 계산: 일반사과는 1점, 황금사과는 3점
+        const normalScore = normalApples.length * 1;
+        const goldenScore = goldenApples.length * 3;
+        totalScore = normalScore + goldenScore;
+      }
+    }
+      if (isValidSelection) {
+      // 디버깅을 위한 로그
+      console.log('=== 점수 계산 디버깅 ===');
+      console.log('일반사과 개수:', normalApples.length);
+      console.log('황금사과 개수:', goldenApples.length);
+      console.log('무지개사과 개수:', rainbowApples.length);
+      console.log('계산된 점수:', totalScore);
+      console.log('일반사과 점수:', normalApples.length * 1);
+      console.log('황금사과 점수:', goldenApples.length * 3);
+      console.log('무지개사과 점수:', rainbowApples.length * 1);
+      console.log('=======================');
+      
+      // 점수 추가
+      setScore(prevScore => prevScore + totalScore);
       
       // 애니메이션 효과
       selectedCells.forEach(cell => {
@@ -380,75 +443,16 @@ const GoldenAppleMode = ({ onBack }) => {
     
     setSelectedCells([]);
   };
-
-  // 선택 상태 완전 정리
-  const cleanupSelection = () => {
-    document.querySelectorAll('.board-cell').forEach(cell => {
-      cell.classList.remove('selected');
-    });
-    
-    if (selectionBoxRef.current) {
-      selectionBoxRef.current.remove();
-      selectionBoxRef.current = null;
-    }
-    
-    mouseIsDownRef.current = false;
-    setIsSelecting(false);
-    setSelectedCells([]);
-  };
-
-  // 타이머 관리
-  useEffect(() => {
-    if (timeLeft > 0 && !gameOver) {
-      timerRef.current = setTimeout(() => {
-        setTimeLeft(timeLeft - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      setGameOver(true);
-    }
-    
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, [timeLeft, gameOver]);
-
-  // 컴포넌트 마운트 시 보드 초기화
-  useEffect(() => {
-    initializeBoard();
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
-
-  // 게임 재시작
-  const restartGame = () => {
-    setScore(0);
-    setTimeLeft(GAME_TIME);
-    setGameOver(false);
-    setApplesRemoved(0);
-    setSelectedCells([]);
-    initializeBoard();
-  };
-
-  // 시간 포맷팅
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
+  
   // 타이머 진행률 계산
   const calculateTimeProgress = () => {
     return (timeLeft / GAME_TIME) * 100;
-  };  return (
-    <div className="classic-mode-container">
-      <div className="game-header">
+  };
+  
+  return (
+    <div className="classic-mode-container">      <div className="game-header">
         <div className="header-content">
-          <h1 className="game-title">Golden Apple</h1>
+          <h1 className="game-title">Golden Apple Mode</h1>
           <div className="progress-container">
             <div 
               className="progress-bar" 
@@ -458,9 +462,11 @@ const GoldenAppleMode = ({ onBack }) => {
           
           <div className="apple-score-container">
             <img src={AppleSVG} alt="Apple" className="apple-icon" />
-            <span className="apple-count">{score}</span>          </div>
+            <span className="apple-count">{score}</span>
+          </div>
         </div>
-      </div>      
+      </div>
+      
       <div 
         ref={gameBoardRef} 
         className="game-board"
@@ -468,39 +474,60 @@ const GoldenAppleMode = ({ onBack }) => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onDragStart={preventDrag}
+        onContextMenu={preventContextMenu}
+        onSelectStart={preventDrag}
       >
-        {gameBoard.map((row, rowIndex) =>
-          row.map((cell, colIndex) => (
-            cell.isVisible && (              <div
-                key={`${rowIndex}-${colIndex}`}
-                className="board-cell"
+        {Array.from({ length: BOARD_SIZE_Y }).map((_, rowIndex) => (
+          Array.from({ length: BOARD_SIZE_X }).map((_, colIndex) => {
+            const cell = gameBoard[rowIndex] && gameBoard[rowIndex][colIndex];
+            if (!cell) return null;
+            
+            return (
+              <div 
+                key={`${rowIndex}-${colIndex}`} 
+                className={`board-cell ${cell.isVisible ? 'apple-cell' : 'empty-cell'} ${cell.type === APPLE_TYPES.BLACK ? 'black-apple' : ''}`}
                 data-row={rowIndex}
-                data-col={colIndex}                style={{
-                  left: `${83 + colIndex * 49}px`,
-                  top: `${55 + rowIndex * 49}px`,
-                }}
+                data-col={colIndex}
+                data-value={cell.value}
+                data-type={cell.type}
+                style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 1 }}
+                draggable="false"
+                onContextMenu={preventContextMenu}
+                onDragStart={preventDrag}
+                onSelectStart={preventDrag}
               >
-                <img 
-                  src={getAppleImage(cell)} 
-                  alt="Apple"
-                  className="apple-image"
-                  draggable={false}
-                />
+                {cell.isVisible && (
+                  <img 
+                    src={getAppleImage(cell)} 
+                    alt={`${cell.type} Apple ${cell.value}`} 
+                    className="apple-image" 
+                    draggable="false"
+                    onDragStart={preventDrag}
+                    onContextMenu={preventContextMenu}
+                  />
+                )}
               </div>
-            )
-          ))
-        )}
-      </div>      {gameOver && (
-        <div className="game-over-modal">
-          <div className="modal-content">
-            <h2>Game Over!</h2>
-            <p>최종 점수: {score}점</p>
+            );
+          })
+        )).flat()}
+      </div>
+      
+      {gameOver && (
+        <div className="game-over-overlay">
+          <div className="game-over-message">
+            <h2>게임 종료!</h2>
+            <p>최종 점수: {score}</p>
             <p>제거한 사과: {applesRemoved}개</p>
-            <p>남은 시간: {formatTime(timeLeft)}</p>
-            <button onClick={restartGame} className="restart-button">다시 하기</button><button onClick={onBack} className="back-to-menu-button">메뉴로</button>
+            <button onClick={initGame}>다시 시작</button>
+            <button onClick={onBack} className="back-button">메인으로 돌아가기</button>
           </div>
         </div>
       )}
+      
+      <button className="ranking-button" onClick={handleRankingClick}>
+        <span className="trophy-icon">🏆</span>
+      </button>
     </div>
   );
 };

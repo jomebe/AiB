@@ -11,6 +11,10 @@ import Apple7 from '../../images/apple7.svg';
 import Apple8 from '../../images/apple8.svg';
 import Apple9 from '../../images/apple9.svg';
 import AppleSVG from '../../images/apples.svg';
+import AuthService from '../../utils/auth';
+import ScoreService from '../../utils/scoreService';
+import Login from '../Login/Login';
+import Rankings from '../Rankings/Rankings';
 
 const ClassicMode = ({ onBack }) => {
   // 게임 설정
@@ -18,22 +22,25 @@ const ClassicMode = ({ onBack }) => {
   const BOARD_SIZE_Y = 10; // 세로 칸 수
   const TARGET_SUM = 10;
   const GAME_TIME = 120; // 2분 (초 단위)
-  
-  // 게임 상태
+    // 게임 상태
   const [gameBoard, setGameBoard] = useState([]);
   const [score, setScore] = useState(0);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedCells, setSelectedCells] = useState([]);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [gameOver, setGameOver] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
-  const [applesRemoved, setApplesRemoved] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(GAME_TIME);  const [applesRemoved, setApplesRemoved] = useState(0);
   const [showRanking, setShowRanking] = useState(false);
-  
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const gameBoardRef = useRef(null);
   const selectionBoxRef = useRef(null);
   const mouseIsDownRef = useRef(false); // 마우스 버튼 상태를 추적하는 ref
   const timerRef = useRef(null);
+  const scoreRef = useRef(0);
+  const applesRemovedRef = useRef(0);
+  const gameStartTimeRef = useRef(null);
   
   // 숫자별 사과 이미지 매핑
   const appleImages = {
@@ -59,12 +66,13 @@ const ClassicMode = ({ onBack }) => {
   const preventContextMenu = (e) => {
     e.preventDefault();
     return false;
+  };  const handleRankingClick = () => {
+    setShowRanking(true);
   };
 
-  const handleRankingClick = () => {
-    setShowRanking(true);
-    // TODO: 랭킹 모달/페이지 표시 로직
-    console.log('랭킹 조회 요청');
+  // 랭킹 팝업 닫기
+  const handleCloseRanking = () => {
+    setShowRanking(false);
   };
   
   // 전역 마우스 업 이벤트 핸들러
@@ -75,9 +83,16 @@ const ClassicMode = ({ onBack }) => {
       handleMouseUp(e);
     }
   };
-  
-  // 초기화
+    // 초기화
   useEffect(() => {
+    // 인증 상태 확인
+    setCurrentUser(AuthService.getCurrentUser());
+    
+    // 인증 상태 변경 리스너 등록
+    const unsubscribe = AuthService.addListener((user) => {
+      setCurrentUser(user);
+    });
+
     initGame();
     
     // 전역 이벤트 리스너 추가
@@ -85,6 +100,7 @@ const ClassicMode = ({ onBack }) => {
     document.addEventListener('contextmenu', preventContextMenu);
     
     return () => {
+      unsubscribe();
       // 전역 이벤트 리스너 제거
       document.removeEventListener('mouseup', handleGlobalMouseUp);
       document.removeEventListener('contextmenu', preventContextMenu);
@@ -95,13 +111,14 @@ const ClassicMode = ({ onBack }) => {
       }
     };
   }, []);
-  
   const initGame = () => {
-    setScore(0);
+    setScore(0);    scoreRef.current = 0;
     setSelectedCells([]);
     setGameOver(false);
-    setTimeLeft(GAME_TIME);
-    setApplesRemoved(0);
+    setTimeLeft(GAME_TIME);    setApplesRemoved(0);
+    applesRemovedRef.current = 0;
+    gameStartTimeRef.current = Date.now();
+    setScoreSubmitted(false);
     
     // 기존 타이머 정리
     if (timerRef.current) {
@@ -113,7 +130,7 @@ const ClassicMode = ({ onBack }) => {
       setTimeLeft(prevTime => {
         if (prevTime <= 1) {
           clearInterval(timerRef.current);
-          setGameOver(true);
+          handleGameEnd();
           return 0;
         }
         return prevTime - 1;
@@ -127,8 +144,7 @@ const ClassicMode = ({ onBack }) => {
   const getRandomAppleValue = () => {
     return Math.floor(Math.random() * 9) + 1;
   };
-  
-  // 게임 보드 생성
+    // 게임 보드 생성
   const generateBoard = () => {
     // 10x15 배열 생성 (세로 10줄, 가로 15칸)
     const newBoard = Array(BOARD_SIZE_Y).fill().map(() => 
@@ -139,6 +155,87 @@ const ClassicMode = ({ onBack }) => {
     );
     
     setGameBoard(newBoard);
+  };  // 게임 종료 처리
+  const handleGameEnd = async () => {
+    setGameOver(true);
+      // ref에서 최신 값 가져오기
+    const currentScore = scoreRef.current;
+    const currentApplesRemoved = applesRemovedRef.current;
+    const currentGameStartTime = gameStartTimeRef.current;
+    
+    // 최신 로그인 상태 다시 확인
+    const latestUser = AuthService.getCurrentUser();
+    console.log('게임 종료 시 로그인 상태:', latestUser);
+    console.log('점수 제출 상태:', { scoreSubmitted, currentScore });
+    console.log('조건 확인:', { 
+      hasUser: !!latestUser, 
+      scoreGreaterThanZero: currentScore > 0,
+      shouldSubmit: latestUser && currentScore > 0,
+      currentScore: currentScore,
+      userPlayerName: latestUser?.playerName
+    });
+    
+    // 로그인된 사용자이고 점수가 0보다 크면 점수 제출
+    if (latestUser && currentScore > 0) {
+      console.log('✅ 점수 제출 조건 만족 - 점수 제출 시작');
+      try {
+        const playTime = Math.floor((Date.now() - currentGameStartTime) / 1000);
+        console.log('점수 제출 시도:', { 
+          currentScore, 
+          playTime, 
+          currentApplesRemoved, 
+          user: latestUser.playerName,
+          isAuthenticated: AuthService.isAuthenticated()
+        });
+        
+        const result = await ScoreService.submitScore({
+          score: currentScore,
+          mode: 'classic',
+          playTime: playTime,
+          applesRemoved: currentApplesRemoved
+        });
+        
+        console.log('점수 제출 성공:', result);
+        setScoreSubmitted(true);
+        
+        if (result.personalBest) {
+          alert(`🎉 게임 종료!\n점수: ${currentScore.toLocaleString()}점\n🏆 개인 최고 기록 달성!\n순위: ${result.rank}위\n\n랭킹을 확인해보세요!`);
+        } else {
+          alert(`게임 종료!\n점수: ${currentScore.toLocaleString()}점\n순위: ${result.rank}위\n\n랭킹에 기록되었습니다!\n랭킹을 확인해보세요!`);
+        }
+        
+        // 게임 종료 후 자동으로 랭킹 표시
+        setTimeout(() => {
+          setShowRanking(true);
+        }, 500);
+        
+      } catch (error) {
+        console.error('점수 제출 실패:', error);
+        // 점수 제출에 실패해도 게임 종료는 알림
+        alert(`게임 종료!\n점수: ${currentScore.toLocaleString()}점\n\n⚠️ 점수 제출 실패: ${error.message}`);
+      }
+    } else if (!latestUser) {
+      console.log('❌ 로그인하지 않음 - 점수 제출 안함');
+      // 로그인하지 않은 경우
+      alert(`게임 종료!\n점수: ${currentScore.toLocaleString()}점\n\n💡 로그인하면 랭킹에 기록됩니다!`);
+    } else {
+      console.log('❌ 점수가 0이거나 조건 불만족 - 점수 제출 안함', { currentScore, latestUser });
+      // 점수가 0인 경우
+      alert(`게임 종료!\n점수: ${currentScore.toLocaleString()}점`);
+    }
+  };
+  // 로그인 성공 처리
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
+    setShowLogin(false);
+    console.log('로그인 성공:', user);
+  };
+
+  // 로그인 모달 닫기
+  const handleLoginClose = () => {
+    setShowLogin(false);
+    // 최신 인증 상태 확인
+    setCurrentUser(AuthService.getCurrentUser());
   };
   
   // 마우스 다운 이벤트
@@ -288,18 +385,21 @@ const ClassicMode = ({ onBack }) => {
     
     setSelectedCells(selectedCellsData);
   };
-  
-  // 선택 검사
+    // 선택 검사
   const checkSelection = () => {
     if (selectedCells.length < 2) return;
     
     // 선택된 셀의 값 합계 계산
     const sum = selectedCells.reduce((total, cell) => total + cell.value, 0);
-    
-    // 합계가 목표값과 일치하는지 확인
+    console.log('선택된 셀:', selectedCells, '합계:', sum);
+      // 합계가 목표값과 일치하는지 확인
     if (sum === TARGET_SUM) {
+      const newScore = score + sum * selectedCells.length;
+      console.log('점수 업데이트:', score, '->', newScore);
+      
       // 점수 추가
-      setScore(prevScore => prevScore + sum * selectedCells.length);
+      setScore(newScore);
+      scoreRef.current = newScore;
       
       // 애니메이션 효과를 위해 선택된 셀에 클래스 추가
       selectedCells.forEach(cell => {
@@ -316,9 +416,13 @@ const ClassicMode = ({ onBack }) => {
           }, 250); // 애니메이션 시간과 맞춤 (0.25초)
         }
       });
-      
-      // 제거된 사과 개수 업데이트
-      setApplesRemoved(prev => prev + selectedCells.length);
+        // 제거된 사과 개수 업데이트
+      setApplesRemoved(prev => {
+        const newCount = prev + selectedCells.length;
+        console.log('사과 제거 개수 업데이트:', prev, '->', newCount);
+        applesRemovedRef.current = newCount;
+        return newCount;
+      });
     }
     
     setSelectedCells([]);
@@ -328,27 +432,44 @@ const ClassicMode = ({ onBack }) => {
   const calculateTimeProgress = () => {
     return (timeLeft / GAME_TIME) * 100;
   };
-  
-  return (
+    return (
     <div className="classic-mode-container">
       <div className="game-header">
         <div className="header-content">
-          <h1 className="game-title">Classic Apple</h1>
-          <div className="progress-container">
-            <div 
-              className="progress-bar" 
-              style={{ width: `${calculateTimeProgress()}%` }}
-            ></div>
+          <div className="header-left">
+            <button onClick={onBack} className="back-button">
+              ← 돌아가기
+            </button>
+            <h1 className="game-title">Classic Apple</h1>
           </div>
           
-          <div className="apple-score-container">
-            <img src={AppleSVG} alt="Apple" className="apple-icon" />
-            <span className="apple-count">{applesRemoved}</span>
+          <div className="header-center">
+            <div className="progress-container">
+              <div 
+                className="progress-bar" 
+                style={{ width: `${calculateTimeProgress()}%` }}
+              ></div>
+            </div>
+            
+            <div className="apple-score-container">
+              <img src={AppleSVG} alt="Apple" className="apple-icon" />
+              <span className="apple-count">{applesRemoved}</span>
+            </div>
+          </div>          <div className="header-right">
+            {AuthService.isAuthenticated() ? (
+              <div className="user-info">
+                <span className="player-name">{AuthService.getPlayerName()}</span>
+                <div className="score-display">점수: {score}</div>
+              </div>
+            ) : (
+              <button onClick={() => setShowLogin(true)} className="login-btn">
+                로그인
+              </button>
+            )}
           </div>
         </div>
       </div>
-      
-      <div 
+        <div 
         ref={gameBoardRef} 
         className="game-board"
         onMouseDown={handleMouseDown}
@@ -357,7 +478,6 @@ const ClassicMode = ({ onBack }) => {
         onMouseLeave={handleMouseLeave}
         onDragStart={preventDrag}
         onContextMenu={preventContextMenu}
-        onSelectStart={preventDrag}
       >
         {/* 게임 보드를 행과 열로 명확하게 렌더링 */}
         {Array.from({ length: BOARD_SIZE_Y }).map((_, rowIndex) => (
@@ -405,11 +525,29 @@ const ClassicMode = ({ onBack }) => {
           </div>
         </div>
       )}
-      
-      {/* 랭킹 버튼 */}
+        {/* 랭킹 버튼 */}
       <button className="ranking-button" onClick={handleRankingClick}>
         <span className="trophy-icon">🏆</span>
-      </button>
+      </button>      {/* 로그인 모달 */}
+      {showLogin && (
+        <Login 
+          onLoginSuccess={handleLoginSuccess}
+          onClose={handleLoginClose}
+        />
+      )}      {/* 랭킹 팝업 모달 */}
+      {showRanking && (
+        <div className="ranking-modal-overlay">
+          <div className="ranking-modal-content">
+            <div className="ranking-modal-header">
+              <h2>🏆 랭킹</h2>
+              <button onClick={handleCloseRanking} className="close-button">
+                ×
+              </button>
+            </div>
+            <Rankings onBack={handleCloseRanking} isModal={true} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

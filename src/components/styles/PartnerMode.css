@@ -117,49 +117,50 @@ html, body {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 1800px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 10px;
   min-height: 100vh;
   box-sizing: border-box;
 }
 
 .header {
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   background: #F2FDEF;
   border-radius: 16px;
-  padding: 20px;
+  padding: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header h1 {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
   color: #000000;
-  margin: 0 0 15px 0;
+  margin: 0 0 10px 0;
   text-align: center;
 }
 
 /* 게임 영역 - 사이드바와 보드를 나란히 배치 */
 .game-area {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   align-items: flex-start;
   width: 100%;
-  max-width: 1800px;
+  max-width: 1600px;
   margin: 0 auto;
+  justify-content: center;
 }
 
 /* 타이머와 점수를 세로로 배치하는 사이드바 */
 .timer-score-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  min-width: 200px;
+  gap: 10px;
+  min-width: 180px;
   background: #F2FDEF;
   border-radius: 16px;
-  padding: 20px;
+  padding: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border: 2px solid #e0f0e3;
   height: fit-content;
@@ -332,20 +333,18 @@ html, body {
 .game-board {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(34, 1fr);
-  grid-template-rows: repeat(20, 48px); /* 클래식 모드와 동일한 높이 */
+  grid-template-columns: repeat(17, 1fr);
+  grid-template-rows: repeat(10, 45px);
   gap: 2px;
-  width: calc(100vw - 280px); /* 사이드바 너비 고려 */
-  max-width: 1360px;
-  height: 1000px; /* 20 * 48 + 19 * 2 + 40 = 1038px, 약간 여유로 1000px */
+  width: 800px;
+  height: 470px;
   background: #F2FDEF;
   border-radius: 16px;
-  padding: 20px;
+  padding: 15px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   cursor: crosshair;
   overflow: visible !important;
-  flex-shrink: 1;
-  flex-grow: 1;
+  margin: 0 auto;
 }
 
 .cell {
@@ -357,8 +356,8 @@ html, body {
   justify-content: center;
   transition: all 0.2s ease;
   border: 2px solid transparent;
-  height: 48px; /* 클래식 모드와 동일한 높이 */
-  min-width: 35px;
+  height: 45px; /* 클래식 모드와 동일한 크기 */
+  width: 45px;
 }
 
 .cell.apple {
@@ -376,56 +375,77 @@ html, body {
 }
 
 .cell.selected {
-  background: rgba(102, 190, 110, 0.3);
-  border-color: #66BE6E;
+  background-color: rgba(255, 107, 107, 0.4) !important;
+  border: 2px solid #ff6b6b !important;
+  z-index: 5;
 }
 
 .cell.partner-selected {
-  background: rgba(77, 171, 247, 0.3);
-  border-color: #4dabf7;
+  background-color: rgba(77, 171, 247, 0.4) !important;
+  border: 2px solid #4dabf7 !important;
+  z-index: 5;
 }
 
 .apple-image {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
+  width: 35px;
+  height: 35px;
   pointer-events: none;
-  transition: transform 0.2s ease;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+  -webkit-user-drag: none;
+  -moz-user-drag: none;
+  -ms-user-drag: none;
 }
 
-.cell-number {
-  position: absolute;
-  font-size: 14px;
-  font-weight: 700;
-  color: #333;
-  pointer-events: none;
-  bottom: 3px;
-  right: 3px;
-  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-/* 선택 박스 */
+/* 선택 영역 스타일 */
 .selection-box {
   position: absolute;
-  border: 2px dashed;
-  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(102, 190, 110, 0.8);
+  background-color: rgba(102, 190, 110, 0.2);
   pointer-events: none;
   z-index: 10;
   border-radius: 4px;
 }
 
 .selection-box.player1 {
-  border-color: #66BE6E;
-  background: rgba(102, 190, 110, 0.2);
+  border-color: rgba(255, 107, 107, 0.8);
+  background-color: rgba(255, 107, 107, 0.2);
 }
 
 .selection-box.player2 {
-  border-color: #4dabf7;
-  background: rgba(77, 171, 247, 0.1);
+  border-color: rgba(77, 171, 247, 0.8);
+  background-color: rgba(77, 171, 247, 0.2);
+}
+
+/* 셀 번호 표시 */
+.cell-number {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+  padding: 1px 2px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* 플레이어 커서 */
+.player-cursor {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  transform: translate(-50%, -100%);
+  margin-top: -10px;
+}
+
+.player-cursor.player2 {
+  background: rgba(77, 171, 247, 0.9);
 }
 
 /* 타이머 개선 */
@@ -509,36 +529,6 @@ html, body {
 
 .volume-control input[type="range"] {
   width: 100px;
-}
-
-/* 상대방 커서 */
-.player-cursor {
-  position: fixed;
-  pointer-events: none;
-  z-index: 1000;
-  transition: all 0.1s ease;
-}
-
-.player-cursor.player2 {
-  color: #4dabf7;
-}
-
-.player-cursor .player-name {
-  position: absolute;
-  top: -30px;
-  left: 10px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.player-cursor::after {
-  content: '↖';
-  font-size: 20px;
-  transform: rotate(45deg);
 }
 
 /* 애니메이션 */
