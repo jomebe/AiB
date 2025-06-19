@@ -491,40 +491,6 @@ const TimeAttackMode = ({ onBack }) => {
           메인으로
         </button>
       </div>
-
-      {/* 게임 오버 오버레이 */}
-      {gameOver && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '40px',
-            borderRadius: '20px',
-            textAlign: 'center',
-            maxWidth: '400px'
-          }}>
-            <h2 style={{ margin: 0, marginBottom: '20px' }}>
-              {noMoreMoves ? '더 이상 움직일 수 없습니다!' : '시간 종료!'}
-            </h2>
-            <p style={{ fontSize: '18px', margin: '10px 0' }}>최종 점수: {score}</p>
-            <p style={{ fontSize: '18px', margin: '10px 0' }}>제거한 사과: {applesRemoved}개</p>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
-              <button onClick={restartGame} className="back-button">재시작</button>
-              <button onClick={onBack} className="back-button">끝내기</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
