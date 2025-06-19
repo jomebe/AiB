@@ -98,7 +98,7 @@ const GoldenAppleMode = ({ onBack }) => {
     mouseIsDownRef.current = false;
       if (isSelecting) {
       handleMouseUp(e);
-    }  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
+    }  }, [isSelecting]);
   
   // 게임 보드 생성 - 먼저 정의
   const generateBoard = useCallback(() => {

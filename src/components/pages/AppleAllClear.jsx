@@ -74,7 +74,7 @@ const AppleAllClear = ({ onBack }) => {
     
     if (isSelecting) {
       handleMouseUp(e);
-    }  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
+    }  }, [isSelecting]);
   
   // 랜덤 숫자 생성 (1~9)
   const getRandomAppleValue = () => {

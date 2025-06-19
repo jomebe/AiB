@@ -80,7 +80,7 @@ const ClassicMode = ({ onBack }) => {
     
     if (isSelecting) {
       handleMouseUp(e);
-    }  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
+    }  }, [isSelecting]);
   // 초기화
   useEffect(() => {
     // 인증 상태 확인

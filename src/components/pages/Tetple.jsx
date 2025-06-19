@@ -284,7 +284,7 @@ const Tetple = ({ onBack }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // 시간 포맷팅
   const formatTime = (seconds) => {
