@@ -74,14 +74,14 @@ const Login = ({ onLoginSuccess, onClose }) => {
                     <div className="form-group">
                         <label htmlFor="password">
                             비밀번호 
-                            <span className="optional">(선택사항)</span>
+                            <span className="optional"></span>
                         </label>
                         <input
                             type="password"
                             id="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="비밀번호 (선택사항)"
+                            placeholder="비밀번호"
                             disabled={loading}
                         />
                     </div>

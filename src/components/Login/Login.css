@@ -89,7 +89,7 @@
 
 .form-group input:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: #66BE6E;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -116,7 +116,7 @@
 .submit-button {
     width: 100%;
     padding: 0.75rem;
-    background-color: #3b82f6;
+    background-color: #66BE6E;
     color: white;
     border: none;
     border-radius: 6px;
@@ -127,7 +127,7 @@
 }
 
 .submit-button:hover:not(:disabled) {
-    background-color: #2563eb;
+    background-color: #66BE6E;
 }
 
 .submit-button:disabled {
@@ -143,7 +143,7 @@
 .toggle-button {
     background: none;
     border: none;
-    color: #3b82f6;
+    color: #66BE6E;
     font-size: 0.875rem;
     cursor: pointer;
     text-decoration: underline;
@@ -151,7 +151,7 @@
 }
 
 .toggle-button:hover:not(:disabled) {
-    color: #2563eb;
+    color: #519c57;
 }
 
 .toggle-button:disabled {
