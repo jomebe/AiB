@@ -89,6 +89,43 @@
   transform: scale(1.05);
 }
 
+/* Header buttons container */
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Logout button */
+.logout-button {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 1);
+  color: #333;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  min-width: auto;
+}
+
+.logout-button:hover {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(255, 255, 255, 1);
+  color: #222;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
 /* Content */
 .rankings-content {
   padding: 32px;

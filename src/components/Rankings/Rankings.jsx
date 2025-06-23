@@ -84,11 +84,24 @@ const Rankings = ({ isOpen, onClose, onBack, gameMode = 'classic' }) => {
     } else if (onClose) {
       onClose();
     }
-  };
-  const handleOverlayClick = (e) => {
+  };  const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       console.log('Overlay clicked'); // 디버깅용
       handleClose(e);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await AuthService.logout();
+      alert('로그아웃되었습니다.');
+      // 로그아웃 후 현재 사용자 정보 업데이트
+      setCurrentUser(null);
+      // 랭킹을 다시 로드하여 YOU 배지 제거
+      loadRankings();
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+      alert('로그아웃 중 오류가 발생했습니다.');
     }
   };
 
@@ -97,8 +110,7 @@ const Rankings = ({ isOpen, onClose, onBack, gameMode = 'classic' }) => {
   }
   return (
     <div className="rankings-overlay" onClick={handleOverlayClick}>
-      <div className="rankings-modal" onClick={(e) => e.stopPropagation()}>
-        {/* 헤더 */}
+      <div className="rankings-modal" onClick={(e) => e.stopPropagation()}>        {/* 헤더 */}
         <div className="rankings-header">
           <div className="header-content">
             {/* <div className="trophy-icon">🏆</div> */}
@@ -107,11 +119,21 @@ const Rankings = ({ isOpen, onClose, onBack, gameMode = 'classic' }) => {
               <span className="mode-badge">{gameMode.toUpperCase()}</span>
             </div>
           </div>
-          <button className="close-button" onClick={handleClose}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
+          <div className="header-buttons">
+            {currentUser && (
+              <button className="logout-button" onClick={handleLogout}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                로그아웃
+              </button>
+            )}
+            <button className="close-button" onClick={handleClose}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
         </div>
         
         <div className="rankings-content">
