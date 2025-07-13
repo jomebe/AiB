@@ -16,7 +16,7 @@ import ScoreService from '../../utils/scoreService';
 import Rankings from '../Rankings/Rankings';
 import Login from '../Login/Login';
 
-const ClassicMode = ({ onBack }) => {
+const ClassicMode = ({ onBack, onScoreSubmitted, onShowRankings }) => {
   // 게임 설정
   const BOARD_SIZE_X = 15; // 가로 칸 수
   const BOARD_SIZE_Y = 10; // 세로 칸 수
@@ -160,10 +160,10 @@ const ClassicMode = ({ onBack }) => {
     }, 1000);
     
     generateBoard();
-  };// 게임 종료 처리
+  };  // 게임 종료 처리
   const handleGameEnd = async () => {
     setGameOver(true);
-      // ref에서 최신 값 가져오기
+    // ref에서 최신 값 가져오기
     const currentScore = scoreRef.current;
     const currentApplesRemoved = applesRemovedRef.current;
     const currentGameStartTime = gameStartTimeRef.current;
@@ -183,6 +183,31 @@ const ClassicMode = ({ onBack }) => {
     // 로그인된 사용자이고 점수가 0보다 크면 점수 제출
     if (latestUser && currentScore > 0) {
       console.log('✅ 점수 제출 조건 만족 - 점수 제출 시작');
+      
+      // 📊 점수 제출 전 현재 랭킹 상태 저장
+      let previousRankings = null;
+      let userPreviousRank = null;
+      let userPreviousScore = null;
+      
+      try {
+        console.log('🔍 점수 제출 전 랭킹 조회 시작...');
+        const beforeData = await ScoreService.getRankings('classic', 50);
+        if (beforeData && beforeData.rankings) {
+          previousRankings = beforeData.rankings;
+          // 현재 사용자의 기존 기록 찾기
+          const userRecord = previousRankings.find(r => r.playerName === latestUser.playerName);
+          if (userRecord) {
+            userPreviousRank = previousRankings.indexOf(userRecord) + 1;
+            userPreviousScore = userRecord.score;
+            console.log(`📈 ${latestUser.playerName}의 기존 기록: ${userPreviousRank}위 (${userPreviousScore}점)`);
+          } else {
+            console.log(`🆕 ${latestUser.playerName}은 첫 기록입니다`);
+          }
+        }
+      } catch (error) {
+        console.error('점수 제출 전 랭킹 조회 실패:', error);
+      }
+      
       try {
         const playTime = Math.floor((Date.now() - currentGameStartTime) / 1000);
         console.log('점수 제출 시도:', { 
@@ -200,13 +225,143 @@ const ClassicMode = ({ onBack }) => {
           applesRemoved: currentApplesRemoved
         });
         
-        console.log('점수 제출 성공:', result);
+        console.log('📤 점수 제출 성공:', result);
+        console.log('📤 제출한 점수:', currentScore);
+        console.log('📤 서버 응답 결과:', {
+          success: result.success,
+          rank: result.rank,
+          personalBest: result.personalBest,
+          message: result.message
+        });
         setScoreSubmitted(true);
+        
+        // 📊 점수 제출 후 랭킹 비교 및 재시도 로직
+        setTimeout(async () => {
+          try {
+            console.log('🔍 점수 제출 후 랭킹 조회 시작... (3초 대기 후)');
+            const afterData = await ScoreService.getRankings('classic', 50);
+            if (afterData && afterData.rankings) {
+              const newRankings = afterData.rankings;
+              const userNewRecord = newRankings.find(r => r.playerName === latestUser.playerName);
+              
+              console.log('🔍 서버에서 받은 사용자 기록:', userNewRecord);
+              console.log('🎯 실제 게임 점수:', currentScore);
+              
+              if (userNewRecord) {
+                const userNewRank = newRankings.indexOf(userNewRecord) + 1;
+                const userNewScore = userNewRecord.score;
+                
+                console.log('═══════════════════════════════════');
+                console.log('🏆 랭킹 변화 분석 결과');
+                console.log('═══════════════════════════════════');
+                console.log(`👤 플레이어: ${latestUser.playerName}`);
+                console.log(`🎯 이번 게임 점수: ${currentScore}점`);
+                console.log(`🗄️ 서버 저장된 점수: ${userNewScore}점`);
+                
+                // 점수 불일치 확인 및 재시도
+                if (currentScore !== userNewScore) {
+                  console.log('🚨🚨🚨 점수 불일치 발견! 🚨🚨🚨');
+                  console.log(`❌ 게임 점수: ${currentScore}점`);
+                  console.log(`❌ 서버 점수: ${userNewScore}점`);
+                  console.log('🔧 점수 재제출을 시도합니다...');
+                  
+                  // 점수 재제출 시도
+                  try {
+                    console.log('🔄 점수 재제출 시작...');
+                    const retryResult = await ScoreService.submitScore({
+                      score: currentScore,
+                      mode: 'classic',
+                      playTime: playTime,
+                      applesRemoved: currentApplesRemoved
+                    });
+                    console.log('🔄 점수 재제출 결과:', retryResult);
+                    
+                    // 재제출 후 다시 확인
+                    setTimeout(async () => {
+                      try {
+                        console.log('🔍 재제출 후 랭킹 재확인...');
+                        const retryAfterData = await ScoreService.getRankings('classic', 50);
+                        if (retryAfterData && retryAfterData.rankings) {
+                          const retryUserRecord = retryAfterData.rankings.find(r => r.playerName === latestUser.playerName);
+                          if (retryUserRecord && retryUserRecord.score === currentScore) {
+                            console.log('✅ 재제출 성공! 점수가 정확히 업데이트되었습니다!');
+                            console.log(`✅ 최종 점수: ${retryUserRecord.score}점`);
+                            
+                            // 랭킹 새로고침 트리거
+                            if (onScoreSubmitted) {
+                              onScoreSubmitted();
+                            }
+                          } else {
+                            console.log('❌ 재제출 후에도 점수가 맞지 않습니다.');
+                            console.log('🔧 서버 측 문제일 가능성이 높습니다.');
+                          }
+                        }
+                      } catch (error) {
+                        console.error('재제출 후 확인 실패:', error);
+                      }
+                    }, 2000);
+                    
+                  } catch (retryError) {
+                    console.error('점수 재제출 실패:', retryError);
+                  }
+                } else {
+                  console.log('✅ 점수가 정확히 업데이트되었습니다!');
+                }
+                
+                if (userPreviousScore !== null) {
+                  console.log(`📊 이전 기록: ${userPreviousRank}위 (${userPreviousScore}점)`);
+                  console.log(`📊 새로운 기록: ${userNewRank}위 (${userNewScore}점)`);
+                  
+                  if (userNewScore > userPreviousScore) {
+                    console.log(`🎉 점수 향상! ${userPreviousScore} → ${userNewScore} (+${userNewScore - userPreviousScore}점)`);
+                  } else if (userNewScore < userPreviousScore) {
+                    console.log(`📉 점수 하락: ${userPreviousScore} → ${userNewScore} (${userNewScore - userPreviousScore}점)`);
+                  } else {
+                    console.log(`⚖️ 점수 동일: ${userNewScore}점`);
+                  }
+                  
+                  if (userNewRank < userPreviousRank) {
+                    console.log(`🚀 순위 상승! ${userPreviousRank}위 → ${userNewRank}위 (${userPreviousRank - userNewRank}등 상승)`);
+                  } else if (userNewRank > userPreviousRank) {
+                    console.log(`📉 순위 하락: ${userPreviousRank}위 → ${userNewRank}위 (${userNewRank - userPreviousRank}등 하락)`);
+                  } else {
+                    console.log(`🔄 순위 유지: ${userNewRank}위`);
+                  }
+                } else {
+                  console.log(`🆕 첫 기록 등록: ${userNewRank}위 (${userNewScore}점)`);
+                }
+                
+                console.log('═══════════════════════════════════');
+                
+                // 전체 랭킹 변화도 확인
+                if (previousRankings && previousRankings.length !== newRankings.length) {
+                  console.log(`📈 전체 랭킹 수 변화: ${previousRankings.length} → ${newRankings.length}`);
+                }
+              } else {
+                console.log('🚨 서버에서 사용자 기록을 찾을 수 없습니다!');
+              }
+            }
+          } catch (error) {
+            console.error('점수 제출 후 랭킹 비교 실패:', error);
+          }
+        }, 3000); // 3초 후 비교
+        
+        // 점수 제출 성공 시 랭킹 새로고침 트리거
+        if (onScoreSubmitted) {
+          onScoreSubmitted();
+        }
         
         if (result.personalBest) {
           alert(`🎉 게임 종료!\n점수: ${currentScore.toLocaleString()}점\n🏆 개인 최고 기록 달성!\n순위: ${result.rank}위\n\n랭킹을 확인해보세요!`);
         } else {
           alert(`게임 종료!\n점수: ${currentScore.toLocaleString()}점\n순위: ${result.rank}위\n\n랭킹에 기록되었습니다!\n랭킹을 확인해보세요!`);        }
+        
+        // 잠시 후 랭킹 모달 자동 열기
+        setTimeout(() => {
+          if (onShowRankings) {
+            onShowRankings();
+          }
+        }, 2000); // 2초 후 랭킹 모달 열기
         
         // 게임 종료 알림만 표시 (랭킹은 수동으로 확인)
         

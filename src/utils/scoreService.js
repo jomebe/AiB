@@ -46,7 +46,7 @@ class ScoreService {
             throw error;
         }
     }    // 랭킹 조회
-    async getRankings(mode = null, limit = 10, offset = 0) {
+    async getRankings(mode = null, limit = 50, offset = 0) {
         try {
             console.log('ScoreService.getRankings 호출:', { mode, limit, offset });
             

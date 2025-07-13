@@ -3,7 +3,7 @@ import ScoreService from '../../utils/scoreService';
 import AuthService from '../../utils/auth';
 import './Rankings.css';
 
-const Rankings = ({ isOpen, onClose, onBack, gameMode = 'classic' }) => {
+const Rankings = ({ isOpen, onClose, onBack, gameMode = 'classic', refreshTrigger = 0 }) => {
   const [rankings, setRankings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,11 +13,12 @@ const Rankings = ({ isOpen, onClose, onBack, gameMode = 'classic' }) => {
       setError(null);
       console.log('=== 랭킹 로딩 시작 ===', gameMode);
       
-      // 실제 API 호출
-      const data = await ScoreService.getRankings(gameMode);
+      // 실제 API 호출 (50개까지 조회)
+      const data = await ScoreService.getRankings(gameMode, 50);
       console.log('API 응답 데이터:', data);
-        if (data && data.rankings) {
-        // API 응답 데이터를 올바른 형식으로 변환하고 점수 내림차순 정렬
+      
+      if (data && data.rankings) {
+        // API 응답 데이터를 올바른 형식으로 변환 (서버에서 이미 정렬된 상태)
         const formattedRankings = data.rankings
           .map((item, index) => ({
             _id: `${item.playerName}_${item.timestamp}`,
@@ -25,33 +26,34 @@ const Rankings = ({ isOpen, onClose, onBack, gameMode = 'classic' }) => {
             score: item.score,
             gameMode: item.mode,
             createdAt: item.timestamp,
-            rank: index + 1, // 정렬 후 순위 재할당
+            created_at: item.timestamp, // 날짜 표시용
+            rank: index + 1, // 서버에서 정렬된 순서대로 순위 할당
             playTime: item.playTime
-          }))
-          .sort((a, b) => b.score - a.score) // 점수 내림차순 정렬
-          .map((item, index) => ({ ...item, rank: index + 1 })); // 정렬 후 순위 재할당
+          }));
         
         console.log('포맷된 랭킹 데이터:', formattedRankings);
         setRankings(formattedRankings);
       } else {
-        console.log('API 응답이 비어있음, 테스트 데이터 사용');        // API 응답이 없으면 테스트 데이터 사용
+        console.log('API 응답이 비어있음, 테스트 데이터 사용');
+        // API 응답이 없으면 테스트 데이터 사용
         const testData = [
-          { _id: '1', username: '테스트유저1', score: 1000, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 1 },
-          { _id: '2', username: '테스트유저2', score: 800, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 2 },
-          { _id: '3', username: '테스트유저3', score: 600, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 3 }
-        ].sort((a, b) => b.score - a.score).map((item, index) => ({ ...item, rank: index + 1 }));
+          { _id: '1', username: '테스트유저1', score: 1000, gameMode: 'classic', createdAt: new Date().toISOString(), created_at: new Date().toISOString(), rank: 1 },
+          { _id: '2', username: '테스트유저2', score: 800, gameMode: 'classic', createdAt: new Date().toISOString(), created_at: new Date().toISOString(), rank: 2 },
+          { _id: '3', username: '테스트유저3', score: 600, gameMode: 'classic', createdAt: new Date().toISOString(), created_at: new Date().toISOString(), rank: 3 }
+        ];
         setRankings(testData);
       }
       
     } catch (err) {
       console.error('랭킹 로드 실패:', err);
       setError('랭킹을 불러오는데 실패했습니다: ' + err.message);
-        // 에러 발생 시에도 테스트 데이터 표시
+      
+      // 에러 발생 시에도 테스트 데이터 표시
       const testData = [
-        { _id: '1', username: '테스트유저1', score: 1000, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 1 },
-        { _id: '2', username: '테스트유저2', score: 800, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 2 },
-        { _id: '3', username: '테스트유저3', score: 600, gameMode: 'classic', createdAt: new Date().toISOString(), rank: 3 }
-      ].sort((a, b) => b.score - a.score).map((item, index) => ({ ...item, rank: index + 1 }));
+        { _id: '1', username: '테스트유저1', score: 1000, gameMode: 'classic', createdAt: new Date().toISOString(), created_at: new Date().toISOString(), rank: 1 },
+        { _id: '2', username: '테스트유저2', score: 800, gameMode: 'classic', createdAt: new Date().toISOString(), created_at: new Date().toISOString(), rank: 2 },
+        { _id: '3', username: '테스트유저3', score: 600, gameMode: 'classic', createdAt: new Date().toISOString(), created_at: new Date().toISOString(), rank: 3 }
+      ];
       setRankings(testData);
     } finally {
       setLoading(false);
@@ -73,7 +75,15 @@ const Rankings = ({ isOpen, onClose, onBack, gameMode = 'classic' }) => {
       loadRankings();
       loadCurrentUser();
     }
-  }, [isOpen, loadRankings, loadCurrentUser]);  const handleClose = (e) => {
+  }, [isOpen, loadRankings, loadCurrentUser]);
+
+  // refreshTrigger 변경 시 랭킹 새로고침
+  useEffect(() => {
+    if (isOpen && refreshTrigger > 0) {
+      console.log('refreshTrigger 변경됨:', refreshTrigger, '- 랭킹 새로고침');
+      loadRankings();
+    }
+  }, [refreshTrigger, isOpen, loadRankings]);  const handleClose = (e) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();

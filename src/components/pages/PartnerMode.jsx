@@ -321,7 +321,7 @@ const PartnerMode = ({ onBack }) => {
         });
     };
 
-    // 게임 생성
+    // 게임 생성 (호스트 설정 강화)
     const createGame = async (otherPlayer, otherName) => {
         // 이미 게임이 생성 중이면 중단
         if (gameId.current) {
@@ -336,9 +336,10 @@ const PartnerMode = ({ onBack }) => {
 
         const newGameId = `game_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
         gameId.current = newGameId;
+        
+        // 호스트 설정 확실히 하기
         setIsHost(true);
-
-        console.log('Creating new game:', newGameId);
+        console.log('Creating new game:', newGameId, '- I am the HOST');
 
         try {
             // 상대방 플레이어의 상태를 'playing'으로 먼저 변경하여 중복 매칭 방지
@@ -353,24 +354,32 @@ const PartnerMode = ({ onBack }) => {
                 scores: {
                     [playerId.current]: 0
                 },
-                timer: TIMER_DURATION,
+                playerNames: {
+                    [playerId.current]: playerName
+                },
+                timer: TIMER_DURATION, // 초기 타이머 값 설정
                 status: 'waiting',
-                host: playerId.current,
+                host: playerId.current, // 호스트 명시
                 createdAt: serverTimestamp()
             });
+
+            console.log('Game created with initial timer:', TIMER_DURATION);
 
             // 다른 플레이어가 참가할 때까지 대기
             const gameRef = ref(database, `games/${newGameId}`);
             const unsubscribe = onValue(gameRef, (snapshot) => {
                 const gameData = snapshot.val();
                 if (gameData && gameData.players.length === 2 && gameData.status === 'playing') {
+                    // 참가한 플레이어의 이름 가져오기
+                    const joinedPlayerId = gameData.players.find(id => id !== playerId.current);
+                    if (joinedPlayerId && gameData.playerNames && gameData.playerNames[joinedPlayerId]) {
+                        setOtherPlayerName(gameData.playerNames[joinedPlayerId]);
+                        console.log('Joined player name:', gameData.playerNames[joinedPlayerId]);
+                    }
                     unsubscribe();
                     startMultiplayerGame(newBoard);
                 }
             });
-
-            // 플레이어 상태 업데이트
-            await set(ref(database, `players/${playerId.current}/status`), 'playing');
 
         } catch (error) {
             console.error('게임 생성 오류:', error);
@@ -379,31 +388,50 @@ const PartnerMode = ({ onBack }) => {
         }
     };
 
-    // 기존 게임에 참가
+    // 기존 게임에 참가 (비호스트 설정 강화)
     const joinExistingGame = async (existingGameId, gameData) => {
         try {
             clearTimeout(matchingTimer.current);
 
             gameId.current = existingGameId;
+            
+            // 비호스트 설정 확실히 하기
             setIsHost(false);
+            console.log('Joining existing game:', existingGameId, '- I am NOT the host');
 
             // 상대방 정보 설정
             const hostId = gameData.players[0];
             otherPlayerId.current = hostId;
 
-            // 호스트 이름 가져오기
-            const hostSnapshot = await get(ref(database, `players/${hostId}`));
-            if (hostSnapshot.exists()) {
-                setOtherPlayerName(hostSnapshot.val().name);
+            // 호스트 이름 가져오기 - 게임 데이터에서 먼저 확인
+            let hostName = 'Player 2';
+            if (gameData.playerNames && gameData.playerNames[hostId]) {
+                hostName = gameData.playerNames[hostId];
+                console.log('Host name from game data:', hostName);
+            } else {
+                // 플레이어 데이터에서 가져오기 (백업)
+                try {
+                    const hostSnapshot = await get(ref(database, `players/${hostId}`));
+                    if (hostSnapshot.exists()) {
+                        hostName = hostSnapshot.val().name || 'Player 2';
+                        console.log('Host name from player data:', hostName);
+                    }
+                } catch (error) {
+                    console.error('Error getting host name:', error);
+                }
             }
+            setOtherPlayerName(hostName);
 
             // 게임에 참가
             await set(ref(database, `games/${existingGameId}/players`), [...gameData.players, playerId.current]);
             await set(ref(database, `games/${existingGameId}/status`), 'playing');
             await set(ref(database, `games/${existingGameId}/scores/${playerId.current}`), 0);
+            await set(ref(database, `games/${existingGameId}/playerNames/${playerId.current}`), playerName);
 
             // 플레이어 상태 업데이트
             await set(ref(database, `players/${playerId.current}/status`), 'playing');
+
+            console.log('Joined game, initial timer from Firebase:', gameData.timer);
 
             // 기존 게임 보드로 게임 시작
             startMultiplayerGame(gameData.gameBoard);
@@ -415,135 +443,149 @@ const PartnerMode = ({ onBack }) => {
         }
     };
 
-    // 멀티플레이어 게임 시작
+    // 멀티플레이어 게임 시작 (로컬 타이머 사용)
     const startMultiplayerGame = (board) => {
         console.log('Starting multiplayer game with board:', board.length, 'rows x', board[0]?.length, 'cols');
+        console.log('Player is host:', isHost, 'Game ID:', gameId.current);
+        
         setGameState('playing');
         setGameOver(false);
         setScore(0);
         setPartnerScore(0);
-
-        // 호스트만 타이머를 초기화하고, 비호스트는 Firebase에서 받은 값 사용
-        if (isHost) {
-            setRemainingTime(TIMER_DURATION);
-        }
-
         setSelectedCells([]);
         setPartnerSelectedCells([]);
         setGameBoard(board);
+        
+        // 로컬 타이머 즉시 시작 - Firebase 동기화 안 함
+        setRemainingTime(TIMER_DURATION);
+        console.log('Starting local timer with:', TIMER_DURATION, 'seconds');
+        
         initAudioContext();
-        startTimer();
+        
+        // 로컬 타이머 바로 시작
+        startLocalTimer();
+        
         setupGameListeners();
-    };    // 게임 리스너 설정
+    };    // 게임 리스너 설정 (에러 처리 강화)
     const setupGameListeners = () => {
-        if (!gameId.current) return;
+        if (!gameId.current || !database) {
+            console.error('Cannot setup listeners - missing gameId or database');
+            return;
+        }
 
-        gameRef.current = ref(database, `games/${gameId.current}`);
+        try {
+            gameRef.current = ref(database, `games/${gameId.current}`);
 
-        // 게임 데이터 변경 리스너
-        onValue(gameRef.current, (snapshot) => {
-            const gameData = snapshot.val();
-            if (!gameData) {
-                // 게임이 삭제되었으면 로비로 돌아가기
-                console.log('Game deleted, returning to lobby');
-                resetToLobby();
-                return;
-            }
+            // 게임 데이터 변경 리스너
+            onValue(gameRef.current, (snapshot) => {
+                const gameData = snapshot.val();
+                if (!gameData) {
+                    // 게임이 삭제되었으면 로비로 돌아가기
+                    console.log('Game deleted, returning to lobby');
+                    resetToLobby();
+                    return;
+                }
 
-            // 플레이어 수 확인
-            if (gameData.players && gameData.players.length < 2) {
-                console.log('Player left the game, only', gameData.players.length, 'players remaining');
-                // 상대방이 나갔음을 알리고 잠시 후 로비로 돌아가기
-                alert('상대방이 게임을 나갔습니다. 로비로 돌아갑니다.');
-                setTimeout(() => resetToLobby(), 2000);
-                return;
-            }
+                // 플레이어 수 확인
+                if (gameData.players && gameData.players.length < 2) {
+                    console.log('Player left the game, only', gameData.players.length, 'players remaining');
+                    // 상대방이 나갔음을 알리고 잠시 후 로비로 돌아가기
+                    alert('상대방이 게임을 나갔습니다. 로비로 돌아갑니다.');
+                    setTimeout(() => resetToLobby(), 2000);
+                    return;
+                }
 
-            // 점수 동기화
-            if (gameData.scores) {
-                console.log('Score sync - my score:', gameData.scores[playerId.current], 'partner score:', gameData.scores[otherPlayerId.current]);
-                setScore(gameData.scores[playerId.current] || 0);
-                setPartnerScore(gameData.scores[otherPlayerId.current] || 0);
-            }
+                // 점수 동기화 (로깅 강화)
+                if (gameData.scores) {
+                    const myNewScore = gameData.scores[playerId.current] || 0;
+                    const partnerNewScore = gameData.scores[otherPlayerId.current] || 0;
+                    console.log('Score sync - my score:', myNewScore, 'partner score:', partnerNewScore);
+                    console.log('Previous scores - my:', score, 'partner:', partnerScore);
+                    setScore(myNewScore);
+                    setPartnerScore(partnerNewScore);
+                }
 
-            // 보드 동기화 - 선택 상태 확인
-            if (gameData.gameBoard) {
-                const isEitherPlayerSelecting = gameData.selectingStates && 
-                    (gameData.selectingStates[playerId.current] || gameData.selectingStates[otherPlayerId.current]);
-                
-                if (!isEitherPlayerSelecting) {
+                // 보드 동기화 (selectingStates 체크 제거)
+                if (gameData.gameBoard && Array.isArray(gameData.gameBoard)) {
                     console.log('Board sync allowed - updating board from Firebase');
                     setGameBoard(gameData.gameBoard);
-                } else {
-                    console.log('Board sync delayed - player is selecting');
                 }
+
+                // 게임 상태 확인
+                if (gameData.status === 'ended') {
+                    endGame();
+                }
+            }, (error) => {
+                console.error('Game listener error:', error);
+                setStatusMessage('연결 오류가 발생했습니다. 다시 시도해주세요.');
+                setTimeout(() => resetToLobby(), 3000);
+            });
+
+            // 상대방 커서 리스너
+            if (otherPlayerId.current) {
+                const cursorsRef = ref(database, `games/${gameId.current}/cursors/${otherPlayerId.current}`);
+                onValue(cursorsRef, (snapshot) => {
+                    const cursorData = snapshot.val();
+                    if (cursorData && typeof cursorData.x === 'number' && typeof cursorData.y === 'number') {
+                        setOtherPlayerCursor(cursorData);
+                    }
+                }, (error) => {
+                    console.error('Cursor listener error:', error);
+                });
+
+                // 상대방 선택 리스너
+                const selectionsRef = ref(database, `games/${gameId.current}/selections/${otherPlayerId.current}`);
+                onValue(selectionsRef, (snapshot) => {
+                    const selectionData = snapshot.val();
+                    if (selectionData && Array.isArray(selectionData)) {
+                        setPartnerSelectedCells(selectionData);
+                    }
+                }, (error) => {
+                    console.error('Selection listener error:', error);
+                });
             }
 
-            // 타이머 동기화 - 모든 플레이어가 Firebase 타이머를 받음
-            if (typeof gameData.timer === 'number') {
-                console.log('Timer sync:', gameData.timer);
-                setRemainingTime(gameData.timer);
-            }
+        } catch (error) {
+            console.error('Error setting up game listeners:', error);
+            setStatusMessage('게임 설정 중 오류가 발생했습니다.');
+            setTimeout(() => resetToLobby(), 3000);
+        }
+    };    // 로컬 타이머 시작 (Firebase 동기화 없음)
+    const startLocalTimer = () => {
+        console.log('Starting local timer');
+        
+        // 기존 타이머 정리
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+        
+        let currentTime = TIMER_DURATION;
+        console.log('Local timer starting with:', currentTime, 'seconds');
+        
+        timerRef.current = setInterval(() => {
+            currentTime--;
+            console.log('Local timer tick:', currentTime);
+            setRemainingTime(currentTime);
 
-            // 게임 상태 확인
-            if (gameData.status === 'ended') {
+            if (currentTime <= 0) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+                console.log('Local timer ended');
                 endGame();
             }
-        });
-
-        // 상대방 커서 리스너
-        const cursorsRef = ref(database, `games/${gameId.current}/cursors/${otherPlayerId.current}`);
-        onValue(cursorsRef, (snapshot) => {
-            const cursorData = snapshot.val();
-            if (cursorData) {
-                setOtherPlayerCursor(cursorData);
-            }
-        });
-
-        // 상대방 선택 리스너
-        const selectionsRef = ref(database, `games/${gameId.current}/selections/${otherPlayerId.current}`);
-        onValue(selectionsRef, (snapshot) => {
-            const selectionData = snapshot.val();
-            if (selectionData) {
-                setPartnerSelectedCells(selectionData);
-            }
-        });
-    };    // 타이머 시작
-    const startTimer = () => {
-        console.log('Starting timer - isHost:', isHost);
-        
-        if (isHost) {
-            // 호스트만 타이머를 실제로 관리하고 Firebase 업데이트
-            console.log('Host starting timer management');
-            timerRef.current = setInterval(async () => {
-                setRemainingTime(prev => {
-                    const newTime = prev - 1;
-                    console.log('Host timer tick:', newTime);
-
-                    // Firebase에 타이머 업데이트
-                    if (gameId.current) {
-                        set(ref(database, `games/${gameId.current}/timer`), newTime).catch(error => {
-                            console.error('Timer update error:', error);
-                        });
-                    }
-
-                    if (newTime <= 0) {
-                        endGame();
-                        return 0;
-                    }
-                    return newTime;
-                });
-            }, 1000);
-        } else {
-            console.log('Non-host - timer will be synced from Firebase');
-        }
+        }, 1000);
     };
 
-    // 게임 종료
+    // 게임 종료 (점수 기록 및 메인 화면 이동 추가)
     const endGame = async () => {
-        // 호스트만 타이머 정리
-        if (isHost) {
+        console.log('Game ending...');
+        console.log('Current scores at game end - score:', score, 'partnerScore:', partnerScore);
+        
+        // 타이머 정리
+        if (timerRef.current) {
             clearInterval(timerRef.current);
+            timerRef.current = null;
         }
 
         setGameOver(true);
@@ -553,16 +595,91 @@ const PartnerMode = ({ onBack }) => {
         if (isHost && gameId.current) {
             try {
                 await set(ref(database, `games/${gameId.current}/status`), 'ended');
+                console.log('Game status updated to ended');
             } catch (error) {
                 console.error('게임 종료 업데이트 오류:', error);
             }
         }
 
-        alert(`게임 종료!\n내 점수: ${score}\n파트너 점수: ${partnerScore}\n총 점수: ${score + partnerScore}`);
+        // Firebase에서 최신 점수 가져오기
+        let finalMyScore = score;
+        let finalPartnerScore = partnerScore;
+        
+        if (gameId.current && database) {
+            try {
+                const gameSnapshot = await get(ref(database, `games/${gameId.current}`));
+                if (gameSnapshot.exists()) {
+                    const gameData = gameSnapshot.val();
+                    if (gameData.scores) {
+                        finalMyScore = gameData.scores[playerId.current] || 0;
+                        finalPartnerScore = gameData.scores[otherPlayerId.current] || 0;
+                        console.log('Final scores from Firebase - mine:', finalMyScore, 'partner:', finalPartnerScore);
+                    }
+                }
+            } catch (error) {
+                console.error('최종 점수 가져오기 오류:', error);
+            }
+        }
+        
+        const totalScore = finalMyScore + finalPartnerScore;
+        console.log('Final scores - My:', finalMyScore, 'Partner:', finalPartnerScore, 'Total:', totalScore);
+        
+        // 호스트만 점수 기록 (중복 방지)
+        if (isHost) {
+            try {
+                if (totalScore > 0) {
+                    const { submitScore } = await import('../../utils/api');
+                    const { getAuth } = await import('../../utils/auth');
+                    
+                    const auth = getAuth();
+                    if (auth.user) {
+                        console.log('Host submitting partner mode score:', totalScore);
+                        const result = await submitScore('partner', totalScore);
+                        console.log('Score submission result:', result);
+                    }
+                }
+            } catch (error) {
+                console.error('점수 기록 실패:', error);
+            }
+        }
+        
+        // 모든 플레이어에게 점수 팝업 표시
+        setTimeout(() => {
+            const confirmed = window.confirm(`게임 종료!\n내 점수: ${finalMyScore}\n파트너 점수: ${finalPartnerScore}\n총 점수: ${totalScore}\n\n확인을 누르면 메인 화면으로 돌아갑니다.`);
+            
+            if (confirmed) {
+                // 메인 화면으로 이동
+                onBack();
+            }
+        }, 300);
     };
 
-    // 로비로 돌아가기
+    // 로비로 돌아가기 (메모리 누수 방지)
     const resetToLobby = async () => {
+        console.log('Resetting to lobby...');
+        
+        // 먼저 타이머와 리스너 정리
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+        
+        if (matchingTimer.current) {
+            clearTimeout(matchingTimer.current);
+            matchingTimer.current = null;
+        }
+
+        // Firebase 리스너 정리
+        if (gameRef.current) {
+            off(gameRef.current);
+            gameRef.current = null;
+        }
+        if (playersRef.current) {
+            off(playersRef.current);
+            playersRef.current = null;
+        }
+
+        // 상태 초기화
         setGameState('lobby');
         setPlayerName('');
         setStatusMessage('');
@@ -573,29 +690,23 @@ const PartnerMode = ({ onBack }) => {
         setSelectedCells([]);
         setPartnerSelectedCells([]);
         setGameBoard([]);
-        clearInterval(timerRef.current);
-        clearTimeout(matchingTimer.current);
+        setIsSelecting(false);
+        // 선택 박스 제거 - setSelectionBox(null) 호출 안 함
+        setIsHost(false);
+        setOtherPlayerName('');
 
-        // Firebase 리스너 정리
-        if (gameRef.current) {
-            off(gameRef.current);
-        }
-        if (playersRef.current) {
-            off(playersRef.current);
-        }
-
-        // 플레이어 데이터 정리
+        // Firebase 데이터 정리 (비동기로 처리)
         try {
-            // 현재 플레이어를 게임에서 제거
             if (gameId.current) {
                 await removePlayerFromGame(playerId.current);
             }
-
-            // 플레이어 데이터 삭제
             await remove(ref(database, `players/${playerId.current}`));
+            console.log('Firebase cleanup completed');
         } catch (error) {
             console.error('데이터 정리 오류:', error);
-        }        // refs 초기화
+        }
+
+        // refs 초기화
         gameId.current = null;
         otherPlayerId.current = null;
         playerId.current = `player_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
@@ -628,50 +739,50 @@ const PartnerMode = ({ onBack }) => {
                 // 점수도 삭제
                 if (gameData.scores && gameData.scores[playerIdToRemove]) {
                     await remove(ref(database, `games/${gameId.current}/scores/${playerIdToRemove}`));
-                }                // 선택 데이터도 삭제
+                }                // 선택 데이터 삭제 (selectingStates 제거)
                 await remove(ref(database, `games/${gameId.current}/selections/${playerIdToRemove}`));
                 await remove(ref(database, `games/${gameId.current}/cursors/${playerIdToRemove}`));
-                await remove(ref(database, `games/${gameId.current}/selectingStates/${playerIdToRemove}`));
             }
         } catch (error) {
             console.error('게임에서 플레이어 제거 오류:', error);
         }
-    };    // 마우스 이벤트 핸들러
+    };    // 마우스 이벤트 핸들러 (줌/스케일 안전, 선택 박스 제거)
     const handleMouseDown = async (e) => {
         if (gameOver || gameState !== 'playing') return;
+        e.preventDefault();
 
-        const rect = gameBoardRef.current.getBoundingClientRect();
+        const rect = gameBoardRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
         startPos.current = { x, y };
         setIsSelecting(true);
-        setSelectionBox({
-            left: x,
-            top: y,
-            width: 0,
-            height: 0
-        });
+        // 선택 박스 제거 - setSelectionBox 호출 안 함
 
-        // 선택 상태를 Firebase에 동기화
+        // 선택 상태를 Firebase에 동기화 (selectingStates 제거)
         if (gameId.current) {
             try {
-                await set(ref(database, `games/${gameId.current}/selectingStates/${playerId.current}`), true);
-                // 커서 위치 전송
+                // 선택 상태 동기화 제거 - 타이머 간섭 방지
+                // 커서 위치 전송 (절대 좌표)
                 await set(ref(database, `games/${gameId.current}/cursors/${playerId.current}`), {
                     x: e.clientX,
                     y: e.clientY
                 });
             } catch (error) {
-                console.error('Firebase 선택 상태 업데이트 오류:', error);
+                console.error('Firebase 커서 위치 업데이트 오류:', error);
             }
         }
     };
 
     const handleMouseMove = async (e) => {
         if (!isSelecting || gameOver || gameState !== 'playing') return;
+        e.preventDefault();
 
-        const rect = gameBoardRef.current.getBoundingClientRect();
+        const rect = gameBoardRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
@@ -680,10 +791,10 @@ const PartnerMode = ({ onBack }) => {
         const width = Math.abs(x - startPos.current.x);
         const height = Math.abs(y - startPos.current.y);
 
-        setSelectionBox({ left, top, width, height });
+        // 선택 박스 업데이트 제거 - setSelectionBox 호출 안 함
         updateSelectedCells(left, top, width, height);
 
-        // 커서 위치 전송
+        // 커서 위치 전송 (절대 좌표)
         if (gameId.current) {
             try {
                 await set(ref(database, `games/${gameId.current}/cursors/${playerId.current}`), {
@@ -701,12 +812,12 @@ const PartnerMode = ({ onBack }) => {
 
         setIsSelecting(false);
         checkSelection();
-        setSelectionBox(null);
+        // 선택 박스 제거 - setSelectionBox(null) 호출 안 함
 
-        // 선택 완료 상태를 Firebase에 동기화
+        // 선택 완료 상태를 Firebase에 동기화 (selectingStates 제거)
         if (gameId.current) {
             try {
-                await set(ref(database, `games/${gameId.current}/selectingStates/${playerId.current}`), false);
+                // 선택 상태 동기화 제거 - 타이머 간섭 방지
                 // 선택 영역 전송
                 await set(ref(database, `games/${gameId.current}/selections/${playerId.current}`), selectedCells);
             } catch (error) {
@@ -715,19 +826,22 @@ const PartnerMode = ({ onBack }) => {
         }
     };
 
-    // 선택된 셀 업데이트
+    // 선택된 셀 업데이트 (줌/스케일 안전)
     const updateSelectedCells = (left, top, width, height) => {
         const cells = [];
-        const cellWidth = gameBoardRef.current.offsetWidth / BOARD_SIZE_X;
-        const cellHeight = gameBoardRef.current.offsetHeight / BOARD_SIZE_Y;
+        if (!gameBoardRef.current) return;
+        
+        const rect = gameBoardRef.current.getBoundingClientRect();
+        const cellWidth = rect.width / BOARD_SIZE_X;
+        const cellHeight = rect.height / BOARD_SIZE_Y;
 
-        const startCol = Math.floor(left / cellWidth);
-        const endCol = Math.floor((left + width) / cellWidth);
-        const startRow = Math.floor(top / cellHeight);
-        const endRow = Math.floor((top + height) / cellHeight);
+        const startCol = Math.max(0, Math.floor(left / cellWidth));
+        const endCol = Math.min(BOARD_SIZE_X - 1, Math.floor((left + width) / cellWidth));
+        const startRow = Math.max(0, Math.floor(top / cellHeight));
+        const endRow = Math.min(BOARD_SIZE_Y - 1, Math.floor((top + height) / cellHeight));
 
-        for (let row = Math.max(0, startRow); row <= Math.min(BOARD_SIZE_Y - 1, endRow); row++) {
-            for (let col = Math.max(0, startCol); col <= Math.min(BOARD_SIZE_X - 1, endCol); col++) {
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startCol; col <= endCol; col++) {
                 if (gameBoard[row] && gameBoard[row][col] !== 0) {
                     cells.push({ row, col });
                 }
@@ -762,8 +876,7 @@ const PartnerMode = ({ onBack }) => {
                     console.log('Updating Firebase with new board and score');
                     await set(ref(database, `games/${gameId.current}/gameBoard`), newBoard);
                     await set(ref(database, `games/${gameId.current}/scores/${playerId.current}`), newScore);
-                    // 선택 상태 해제
-                    await set(ref(database, `games/${gameId.current}/selectingStates/${playerId.current}`), false);
+                    // 선택 상태 해제 제거 - selectingStates 사용 안 함
                     console.log('Firebase update completed');
                 } catch (error) {
                     console.error('게임 데이터 업데이트 오류:', error);
@@ -850,47 +963,57 @@ const PartnerMode = ({ onBack }) => {
 
     // 게임 화면 렌더링
     const renderGame = () => (
-        <div className="game-container">
-            <div className="header">
-                <h1>사과 상자 게임 - 협동모드</h1>
-                <div className="score-display">
-                    <div className="total-score">
-                        <span className="score-label">총 점수</span>
-                        <span className="score-value">{(score || 0) + (partnerScore || 0)}</span>
+        <div className="partner-game-container">
+            <div className="partner-header">
+                <div className="partner-title">사과 상자 게임 - 협동모드</div>
+                <div className="partner-score-display">
+                    <div className="total-score-section">
+                        <span className="total-label">총 점수</span>
+                        <span className="total-value">{(score || 0) + (partnerScore || 0)}</span>
                     </div>
-                    <div className="individual-scores">
-                        <div className="player-score player1-score">
-                            <span className="player-color player1-color">●</span>
-                            <span className="player-name">{playerName || '플레이어1'}</span>
-                            <span className="score-value">{score || 0}</span>
+                    <div className="players-scores">
+                        <div className="player-info player1">
+                            <span className="player-dot">●</span>
+                            <span className="player-label">{playerName || '플레이어1'}</span>
+                            <span className="player-score-value">{score || 0}</span>
                         </div>
-                        <div className="player-score player2-score">
-                            <span className="player-color player2-color">●</span>
-                            <span className="player-name">{otherPlayerName || '플레이어2'}</span>
-                            <span className="score-value">{partnerScore || 0}</span>
+                        <div className="player-info player2">
+                            <span className="player-dot">●</span>
+                            <span className="player-label">{otherPlayerName || '플레이어2'}</span>
+                            <span className="player-score-value">{partnerScore || 0}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="game-area">
+            <div className="partner-game-area">
                 <div
-                    className="game-board"
+                    className="partner-game-board"
                     ref={gameBoardRef}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={() => setIsSelecting(false)}
+                    style={{
+                        gridTemplateColumns: `repeat(${BOARD_SIZE_X}, 1fr)`,
+                        gridTemplateRows: `repeat(${BOARD_SIZE_Y}, 1fr)`,
+                        minHeight: `${BOARD_SIZE_Y * 45 + 30}px`, // 하단 행이 잘리지 않도록
+                        overflow: 'visible'
+                    }}
                 >
                     {gameBoard.map((row, rowIndex) =>
                         row.map((cell, colIndex) => (
                             <div
                                 key={`${rowIndex}-${colIndex}`}
-                                className={`cell ${cell === 0 ? 'empty' : 'apple'} ${
+                                className={`cell board-cell ${cell === 0 ? 'empty-cell' : 'apple-cell'} ${
                                     selectedCells.some(({ row, col }) => row === rowIndex && col === colIndex) ? 'selected' : ''
                                 } ${
                                     partnerSelectedCells.some(({ row, col }) => row === rowIndex && col === colIndex) ? 'partner-selected' : ''
                                 }`}
+                                style={{
+                                    gridColumn: colIndex + 1,
+                                    gridRow: rowIndex + 1
+                                }}
                             >
                                 {cell > 0 && (
                                     <img
@@ -905,22 +1028,15 @@ const PartnerMode = ({ onBack }) => {
                         ))
                     )}
 
-                    {selectionBox && (
-                        <div
-                            className="selection-box player1"
-                            style={{
-                                left: selectionBox.left,
-                                top: selectionBox.top,
-                                width: selectionBox.width,
-                                height: selectionBox.height
-                            }}
-                        />
-                    )}
+                    {/* 선택 박스 제거 - 드래그 영역 표시 불필요 */}
                 </div>
 
-                <div className="timer-container">
+                <div className="partner-timer-container">
+                    <div className="partner-timer-display">
+                        <span className="partner-timer-text">{formatTime(remainingTime)}</span>
+                    </div>
                     <div
-                        className="timer-bar"
+                        className="partner-timer-bar"
                         style={{ height: `${(remainingTime / TIMER_DURATION) * 100}%` }}
                     />
                 </div>

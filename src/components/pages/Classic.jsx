@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import '../styles/Classic.css';
 import ClassicMode from './ClassicMode';
 import TimeAttackMode from './TimeAttackMode';
+import Rankings from '../Rankings/Rankings';
 import Apple1 from '../../images/apple1.svg';
 import Apple2 from '../../images/apple2.svg';
 import Apple3 from '../../images/apple3.svg';
@@ -12,6 +13,8 @@ import Apple7 from '../../images/apple7.svg';
 
 function Classic({ onBack }) {
   const [selectedMode, setSelectedMode] = useState(null);
+  const [showRankings, setShowRankings] = useState(false);
+  const [rankingsRefreshTrigger, setRankingsRefreshTrigger] = useState(0);
 
   const handleClassicApple = () => {
     setSelectedMode('classic');
@@ -22,17 +25,36 @@ function Classic({ onBack }) {
   };
 
   const handleRankings = () => {
-    // TODO: 랭킹 모달/페이지 표시 로직
-    console.log('랭킹 조회 요청');
+    setShowRankings(true);
+  };
+
+  // 점수 제출 성공 시 랭킹 새로고침 트리거
+  const triggerRankingsRefresh = () => {
+    setRankingsRefreshTrigger(prev => prev + 1);
+  };
+
+  // 점수 제출 성공 시 랭킹 새로고침
+  const handleScoreSubmitted = (scoreData) => {
+    console.log('점수 제출 성공, 랭킹 새로고침 예약');
+    
+    // 서버 새로고침만 사용 (즉시 업데이트는 제거)
+    triggerRankingsRefresh();
   };
 
   // 선택된 모드에 따라 컴포넌트 렌더링
   if (selectedMode === 'classic') {
-    return <ClassicMode onBack={() => setSelectedMode(null)} />;
+    return <ClassicMode 
+      onBack={() => setSelectedMode(null)} 
+      onScoreSubmitted={handleScoreSubmitted}
+      onShowRankings={() => setShowRankings(true)}
+    />;
   }
   
   if (selectedMode === 'timeAttack') {
-    return <TimeAttackMode onBack={() => setSelectedMode(null)} />;
+    return <TimeAttackMode 
+      onBack={() => setSelectedMode(null)} 
+      onScoreSubmitted={handleScoreSubmitted}
+    />;
   }
 
   const renderModeSelection = () => {
@@ -70,9 +92,16 @@ function Classic({ onBack }) {
   const renderGameContent = () => {
     switch(selectedMode) {
       case 'classic':
-        return <ClassicMode onBack={() => setSelectedMode(null)} />;
+        return <ClassicMode 
+          onBack={() => setSelectedMode(null)} 
+          onScoreSubmitted={handleScoreSubmitted}
+          onShowRankings={() => setShowRankings(true)}
+        />;
       case 'timeAttack':
-        return <TimeAttackMode onBack={() => setSelectedMode(null)} />;
+        return <TimeAttackMode 
+          onBack={() => setSelectedMode(null)} 
+          onScoreSubmitted={handleScoreSubmitted}
+        />;
       default:
         return renderModeSelection();
     }
@@ -97,6 +126,15 @@ function Classic({ onBack }) {
           <span className="trophy-icon">🏆</span>
         </button>
       )}
+
+      {/* 랭킹 모달 */}
+      <Rankings 
+        isOpen={showRankings}
+        onClose={() => setShowRankings(false)}
+        onBack={() => setShowRankings(false)}
+        gameMode="classic"
+        refreshTrigger={rankingsRefreshTrigger}
+      />
     </div>
   );
 }

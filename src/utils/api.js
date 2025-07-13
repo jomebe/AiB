@@ -80,16 +80,23 @@ class ApiClient {
 
     // 점수 제출 API
     async submitScore(scoreData) {
-        return this.request('/scores', {
+        const requestData = {
+            score: scoreData.score,
+            mode: scoreData.mode,
+            playTime: scoreData.playTime,
+            applesRemoved: scoreData.applesRemoved,
+            timestamp: new Date().toISOString()
+        };
+        
+        console.log('🚀 점수 제출 API 요청 데이터:', requestData);
+        
+        const response = await this.request('/scores', {
             method: 'POST',
-            body: JSON.stringify({
-                score: scoreData.score,
-                mode: scoreData.mode,
-                playTime: scoreData.playTime,
-                applesRemoved: scoreData.applesRemoved,
-                timestamp: new Date().toISOString()
-            })
+            body: JSON.stringify(requestData)
         });
+        
+        console.log('📥 점수 제출 API 응답:', response);
+        return response;
     }
 
     // 랭킹 관련 API

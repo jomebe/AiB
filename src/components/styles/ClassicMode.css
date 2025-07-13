@@ -132,7 +132,7 @@ html, body {
 
 .progress-bar {
   height: 100%;
-  background-color: #66BE6E;
+  background-color: #66be6e;
   border-radius: 12px;
   transition: width 1s linear;
 }
@@ -180,30 +180,331 @@ html, body {
   overflow: hidden;
 }
 
-/* PartnerMode용 보드 - 클래식 모드와 비슷한 크기 */
-.game-board.partner-mode {
-  grid-template-columns: repeat(17, 45px);
-  grid-template-rows: repeat(10, 45px);
+/* PartnerMode 전용 레이아웃 스타일 */
+.partner-game-container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  background: #f5fdf7;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+.partner-header {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 15px 20px;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.partner-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.partner-score-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.total-score-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #e8f5e8;
+  padding: 10px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.total-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.total-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2d5a2d;
+}
+
+.players-scores {
+  display: flex;
+  gap: 20px;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 120px;
+}
+
+.player-info.player1 .player-dot {
+  color: #ff6b6b;
+  font-size: 16px;
+}
+
+.player-info.player2 .player-dot {
+  color: #4dabf7;
+  font-size: 16px;
+}
+
+.player-label {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.player-score-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-left: auto;
+}
+
+.partner-game-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding: 20px;
+  overflow: hidden;
+  gap: 20px;
+}
+
+.partner-game-board {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(10, 1fr);
   gap: 2px;
-  padding: 10px;
-  max-width: 95vw;
-  max-height: 75vh;
-  margin: 20px auto;
+  background: #F2FDEF;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: crosshair;
+  max-width: 700px;
+  max-height: 500px;
+  aspect-ratio: 3/2;
+  overflow: visible;
+}
+
+/* PartnerMode 게임 보드 셀 스타일 */
+.partner-game-board .cell {
+  position: relative;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  min-height: 40px;
+  aspect-ratio: 1;
+}
+
+.partner-game-board .cell.apple-cell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.partner-game-board .cell.empty-cell {
+  background: transparent;
+  opacity: 0.3;
+  cursor: default;
+}
+
+.partner-game-board .cell.selected {
+  background-color: rgba(255, 107, 107, 0.3) !important;
+  border: 2px solid #ff6b6b !important;
+  transform: scale(1.05);
+}
+
+.partner-game-board .cell.partner-selected {
+  background-color: rgba(77, 171, 247, 0.3) !important;
+  border: 2px solid #4dabf7 !important;
+  transform: scale(1.05);
+}
+
+.partner-game-board .apple-image {
+  width: 85%;
+  height: 85%;
+  object-fit: contain;
+  transition: all 0.25s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
+}
+
+.partner-game-board .cell-number {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+  padding: 1px 3px;
+  line-height: 1;
+}
+
+.partner-game-board .selection-box {
+  position: absolute;
+  border: 2px dashed #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  z-index: 10;
+  pointer-events: none;
+  border-radius: 4px;
+}
+
+.partner-timer-container {
+  position: relative;
+  width: 60px;
+  height: 400px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.partner-timer-display {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.partner-timer-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.partner-timer-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, #ff6b6b, #feca57, #48dbfb);
+  transition: height 1s ease-in-out;
+  border-radius: 0 0 8px 8px;
 }
 
 /* 작은 화면에서의 반응형 조정 */
-@media (max-width: 768px) {
-  .game-board {
-    grid-template-columns: repeat(15, 35px);
-    grid-template-rows: repeat(10, 35px);
-    gap: 1px;
-    padding: 8px;
+@media (max-width: 1024px) {
+  .partner-title {
+    font-size: 20px;
   }
-    .game-board.partner-mode {
-    grid-template-columns: repeat(17, 35px);
-    grid-template-rows: repeat(10, 35px);
-    gap: 1px;
-    padding: 5px;
+  
+  .total-value {
+    font-size: 24px;
+  }
+  
+  .partner-game-board {
+    max-width: 600px;
+    max-height: 400px;
+  }
+  
+  .partner-timer-container {
+    width: 50px;
+    height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .partner-header {
+    padding: 10px 15px;
+  }
+  
+  .partner-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+  .partner-score-display {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .players-scores {
+    gap: 15px;
+  }
+  
+  .player-info {
+    min-width: 100px;
+    padding: 8px 12px;
+  }
+  
+  .partner-game-area {
+    flex-direction: column;
+    padding: 15px;
+    gap: 15px;
+  }
+  
+  .partner-timer-container {
+    order: 1;
+    width: 80%;
+    height: 40px;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+  
+  .partner-timer-display {
+    position: static;
+    transform: none;
+    margin-right: 15px;
+    background: rgba(255, 255, 255, 0.9);
+  }
+  
+  .partner-timer-text {
+    font-size: 14px;
+  }
+  
+  .partner-timer-bar {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, #ff6b6b, #feca57, #48dbfb);
+  }
+  
+  .partner-game-board {
+    order: 2;
+    max-width: 90vw;
+    max-height: 60vh;
   }
 }
 
@@ -279,7 +580,7 @@ html, body {
 
 .selection-box {
   position: absolute;
-  border: 2px dashed #2196F3;
+  border: 2px dashed #2196f3;
   background-color: rgba(33, 150, 243, 0.2);
   pointer-events: none;
   z-index: 10;
@@ -310,12 +611,12 @@ html, body {
 }
 
 .back-button {
-  background-color: #F2FDEF !important;
+  background-color: #f2fdef !important;
   color: #000000 !important;
 }
 
 .back-button:hover {
-  background-color: #F2FDEF !important;
+  background-color: #f2fdef !important;
 }
 
 .game-over-overlay {
@@ -377,7 +678,7 @@ html, body {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #66BE6E, #4CAF50, #66BE6E);
+  background: linear-gradient(90deg, #66be6e, #4caf50, #66be6e);
   animation: shimmer 2s ease-in-out infinite;
 }
 
@@ -425,7 +726,7 @@ html, body {
 
 .game-over-subtitle {
   font-size: 16px;
-  color: #66BE6E;
+  color: #66be6e;
   margin: 8px 0 0 0;
   font-weight: 500;
 }
@@ -454,7 +755,7 @@ html, body {
 .stat-value {
   font-size: 28px;
   font-weight: 800;
-  color: #66BE6E;
+  color: #66be6e;
   margin-bottom: 8px;
   text-shadow: 0 2px 4px rgba(102, 190, 110, 0.2);
 }
@@ -491,7 +792,7 @@ html, body {
 }
 
 .primary-button {
-  background: linear-gradient(135deg, #66BE6E, #4CAF50);
+  background: linear-gradient(135deg, #66be6e, #4caf50);
   color: white;
   box-shadow: 0 4px 12px rgba(102, 190, 110, 0.3);
 }
@@ -590,7 +891,7 @@ html, body {
   height: 400px;
   margin: 20px auto;
   padding: 20px;
-  background: #F2FDEF;
+  background: #f2fdef;
   border-radius: 16px;
   position: relative;
 }
@@ -715,7 +1016,7 @@ html, body {
   height: 520px;
   margin: 20px auto;
   padding: 80px 60px 80px 100px;
-  background: #F2FDEF;
+  background: #f2fdef;
   border-radius: 16px;
   position: relative;
   place-content: center;
@@ -776,7 +1077,7 @@ html, body {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   min-width: 350px;
   max-width: 500px;
-  border: 2px solid #66BE6E;
+  border: 2px solid #66be6e;
   transform: scale(0.8);
   animation: scaleIn 0.3s ease-out forwards;
 }
@@ -819,13 +1120,13 @@ html, body {
 }
 
 .restart-button {
-  background: linear-gradient(45deg, #66BE6E, #4CAF50);
+  background: linear-gradient(45deg, #66be6e, #4caf50);
   color: white;
   border: 2px solid transparent;
 }
 
 .restart-button:hover {
-  background: linear-gradient(45deg, #4CAF50, #45a049);
+  background: linear-gradient(45deg, #4caf50, #45a049);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
 }
@@ -926,7 +1227,7 @@ html, body {
 /* PartnerMode 전용 스타일 */
 .partner-selected {
   background-color: rgba(255, 193, 7, 0.4) !important;
-  border: 2px solid #FFC107 !important;
+  border: 2px solid #ffc107 !important;
 }
 
 .player-cursor {
@@ -966,11 +1267,11 @@ html, body {
 }
 
 .player1-color {
-  color: #2196F3;
+  color: #2196f3;
 }
 
 .player2-color {
-  color: #FFC107;
+  color: #ffc107;
 }
 
 /* 로비 스타일 (PartnerMode용) */
@@ -981,11 +1282,11 @@ html, body {
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
-  background: #DDF5D1;
+  background: #ddf5d1;
 }
 
 .lobby-content {
-  background: #F2FDEF;
+  background: #f2fdef;
   border-radius: 24px;
   padding: 40px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
@@ -1011,7 +1312,7 @@ html, body {
 
 .nickname-form button {
   padding: 12px 30px;
-  background-color: #66BE6E;
+  background-color: #66be6e;
   color: white;
   border: none;
   border-radius: 12px;
@@ -1147,21 +1448,145 @@ html, body {
   border-color: #3b82f6;
 }
 
-/* 모바일 대응 */
+/* PartnerMode 타이머 디스플레이 */
+.timer-container {
+  position: relative;
+  width: 60px;
+  height: 400px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  margin-left: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.timer-display {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 5px 10px;
+  border-radius: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.timer-text {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.timer-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, #ff6b6b, #feca57, #48dbfb);
+  transition: height 1s ease-in-out;
+  border-radius: 0 0 8px 8px;
+}
+
+/* 작은 화면에서의 타이머 조정 */
 @media (max-width: 768px) {
-  .ranking-modal-overlay {
-    padding: 10px;
+  .timer-container {
+    width: 40px;
+    height: 300px;
+    margin-left: 10px;
   }
   
-  .ranking-modal-content {
-    max-height: 90vh;
+  .timer-text {
+    font-size: 12px;
+  }
+}
+
+/* PartnerMode 선택 스타일 */
+.partner-mode .cell.selected {
+  background-color: rgba(255, 107, 107, 0.3) !important;
+  border: 2px solid #ff6b6b !important;
+  transform: scale(1.05);
+}
+
+.partner-mode .cell.partner-selected {
+  background-color: rgba(77, 171, 247, 0.3) !important;
+  border: 2px solid #4dabf7 !important;
+  transform: scale(1.05);
+}
+
+.partner-mode .selection-box.player1 {
+  border: 2px dashed #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.partner-mode .selection-box.player2 {
+  border: 2px dashed #4dabf7;
+  background: rgba(77, 171, 247, 0.1);
+}
+
+/* PartnerMode 커서 스타일 */
+.player-cursor {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.player-cursor.player1::before {
+  content: "●";
+  color: #ff6b6b;
+  font-size: 16px;
+}
+
+.player-cursor.player2::before {
+  content: "●";
+  color: #4dabf7;
+  font-size: 16px;
+}
+
+.player-cursor .player-name {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* PartnerMode 반응형 개선 */
+@media (max-width: 768px) {
+  .partner-mode .game-area {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
   }
   
-  .ranking-modal-header {
-    padding: 15px;
+  .partner-mode .timer-container {
+    order: 1;
+    width: 100%;
+    height: 30px;
+    flex-direction: row;
+    margin: 0;
   }
   
-  .rankings-container.modal-mode {
-    font-size: 14px;
+  .partner-mode .timer-bar {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, #ff6b6b, #feca57, #48dbfb);
+  }
+  
+  .partner-mode .timer-display {
+    position: static;
+    transform: none;
+    margin-right: 10px;
   }
 }
