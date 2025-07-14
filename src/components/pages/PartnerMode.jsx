@@ -206,15 +206,48 @@ const PartnerMode = ({ onBack }) => {
         board[startY][startX + len - 1] = remainingSum;
     };
 
-    // Firebase 데이터 초기화 (모든 게임과 플레이어 데이터 삭제)
-    const clearFirebaseData = async () => {
+    // Firebase 데이터 정리 (진행 중인 게임은 보호)
+    const cleanupOldData = async () => {
         try {
-            console.log('Clearing Firebase data...');
-            await remove(ref(database, 'games'));
-            await remove(ref(database, 'players'));
-            console.log('Firebase data cleared successfully');
+            console.log('Cleaning up old Firebase data...');
+            
+            // 진행 중인 게임 확인
+            const gamesSnapshot = await get(ref(database, 'games'));
+            const playersSnapshot = await get(ref(database, 'players'));
+            
+            if (gamesSnapshot.exists()) {
+                const games = gamesSnapshot.val();
+                const activeGames = Object.entries(games).filter(([gameId, game]) => 
+                    game.status === 'playing' && 
+                    game.players && 
+                    game.players.length === 2
+                );
+                
+                console.log('Active games found:', activeGames.length);
+                
+                // 진행 중이 아닌 게임들만 삭제
+                for (const [gameId, game] of Object.entries(games)) {
+                    if (game.status !== 'playing' || !game.players || game.players.length < 2) {
+                        console.log('Removing inactive game:', gameId);
+                        await remove(ref(database, `games/${gameId}`));
+                    }
+                }
+            }
+            
+            if (playersSnapshot.exists()) {
+                const players = playersSnapshot.val();
+                // 검색 중인 플레이어만 삭제 (playing 상태는 유지)
+                for (const [playerId, player] of Object.entries(players)) {
+                    if (player.status === 'searching') {
+                        console.log('Removing searching player:', playerId);
+                        await remove(ref(database, `players/${playerId}`));
+                    }
+                }
+            }
+            
+            console.log('Firebase cleanup completed (active games preserved)');
         } catch (error) {
-            console.error('Error clearing Firebase data:', error);
+            console.error('Error cleaning Firebase data:', error);
         }
     };
 
@@ -303,7 +336,9 @@ const PartnerMode = ({ onBack }) => {
                     if (isMatched) return; // 이미 매칭되었으면 무시
 
                     const players = snapshot.val();
-                    if (!players) return;                    // 자신을 제외한 매칭 중인 플레이어 찾기
+                    if (!players) return;
+                    
+                    // 자신을 제외한 매칭 중인 플레이어 찾기 (playing 상태는 제외)
                     const otherPlayers = Object.entries(players).filter(([id, player]) =>
                         id !== playerId.current &&
                         player.status === 'searching' &&
@@ -896,8 +931,8 @@ const PartnerMode = ({ onBack }) => {
 
     // 컴포넌트 마운트/언마운트 시 처리
     useEffect(() => {
-        // 컴포넌트 마운트 시 Firebase 데이터 초기화
-        clearFirebaseData();
+        // 컴포넌트 마운트 시 오래된 데이터만 정리 (진행 중인 게임 보호)
+        cleanupOldData();
 
         // 브라우저 탭/창 닫힘 감지
         const handleBeforeUnload = () => {
