@@ -33,18 +33,6 @@ function Arcade({ onBack }) {
       <div className="mode-selection-container">
         <div 
           className="mode-card" 
-          onClick={() => handleModeSelect('tetple')}
-          onDragStart={preventDrag}
-        >
-          <div className="apple-grid tetple-grid">
-            <div className="apple-item"><img src={Apple2} alt="2" draggable="false" /></div>
-            <div className="apple-item"><img src={Apple2} alt="2" draggable="false" /></div>
-            <div className="apple-item"><img src={Apple5} alt="5" draggable="false" /></div>
-            <div className="apple-item"><img src={Apple3} alt="3" draggable="false" /></div>
-          </div>
-          <div className="mode-title">Tetple</div>
-        </div>        <div 
-          className="mode-card" 
           onClick={() => handleModeSelect('partner')}
           onDragStart={preventDrag}
         >
@@ -84,7 +72,6 @@ function Arcade({ onBack }) {
     switch(selectedMode) {
       case 'golden':
         return <GoldenAppleMode onBack={() => setSelectedMode(null)} />;
-      case 'tetple':
       case 'partner':
       case 'allClear':
         return <ArcadeMode mode={selectedMode} onBack={() => setSelectedMode(null)} />;

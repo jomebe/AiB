@@ -89,6 +89,8 @@ const PartnerMode = ({ onBack }) => {
     const audioContext = useRef(null);
     const gameRef = useRef(null);
     const playersRef = useRef(null);
+    const selectionBoxRef = useRef(null);
+    const mouseIsDownRef = useRef(false);
 
     // 랜덤 숫자 생성
     const getRandomAppleValue = () => Math.floor(Math.random() * MAX_APPLE_VALUE) + 1;
@@ -781,26 +783,34 @@ const PartnerMode = ({ onBack }) => {
         } catch (error) {
             console.error('게임에서 플레이어 제거 오류:', error);
         }
-    };    // 마우스 이벤트 핸들러 (줌/스케일 안전, 선택 박스 제거)
+    };    // 마우스 이벤트 핸들러 (ClassicMode 방식 적용)
     const handleMouseDown = async (e) => {
-        if (gameOver || gameState !== 'playing') return;
-        e.preventDefault();
-
-        const rect = gameBoardRef.current?.getBoundingClientRect();
-        if (!rect) return;
+        // 우클릭 무시
+        if (e.button === 2) return;
         
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        if (gameOver || gameState !== 'playing') return;
+        
+        mouseIsDownRef.current = true;
+        
+        const boardRect = gameBoardRef.current?.getBoundingClientRect();
+        if (!boardRect) return;
+        
+        const x = e.clientX - boardRect.left;
+        const y = e.clientY - boardRect.top;
 
-        startPos.current = { x, y };
         setIsSelecting(true);
-        // 선택 박스 제거 - setSelectionBox 호출 안 함
+        setSelectedCells([]);
+        startPos.current = { x, y };
+        
+        // 선택 상자 생성
+        createSelectionBox(x, y);
+        
+        // 이벤트 전파 중지
+        e.stopPropagation();
 
-        // 선택 상태를 Firebase에 동기화 (selectingStates 제거)
+        // Firebase에 커서 위치 전송
         if (gameId.current) {
             try {
-                // 선택 상태 동기화 제거 - 타이머 간섭 방지
-                // 커서 위치 전송 (절대 좌표)
                 await set(ref(database, `games/${gameId.current}/cursors/${playerId.current}`), {
                     x: e.clientX,
                     y: e.clientY
@@ -812,24 +822,22 @@ const PartnerMode = ({ onBack }) => {
     };
 
     const handleMouseMove = async (e) => {
-        if (!isSelecting || gameOver || gameState !== 'playing') return;
-        e.preventDefault();
-
-        const rect = gameBoardRef.current?.getBoundingClientRect();
-        if (!rect) return;
+        if (!isSelecting || !mouseIsDownRef.current || gameOver || gameState !== 'playing') return;
         
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const boardRect = gameBoardRef.current?.getBoundingClientRect();
+        if (!boardRect) return;
+        
+        const x = e.clientX - boardRect.left;
+        const y = e.clientY - boardRect.top;
 
-        const left = Math.min(startPos.current.x, x);
-        const top = Math.min(startPos.current.y, y);
-        const width = Math.abs(x - startPos.current.x);
-        const height = Math.abs(y - startPos.current.y);
+        updateSelectionBox(x, y);
+        updateSelectedCells();
 
-        // 선택 박스 업데이트 제거 - setSelectionBox 호출 안 함
-        updateSelectedCells(left, top, width, height);
+        // 텍스트 선택 방지
+        e.preventDefault();
+        e.stopPropagation();
 
-        // 커서 위치 전송 (절대 좌표)
+        // Firebase에 커서 위치 전송
         if (gameId.current) {
             try {
                 await set(ref(database, `games/${gameId.current}/cursors/${playerId.current}`), {
@@ -845,15 +853,12 @@ const PartnerMode = ({ onBack }) => {
     const handleMouseUp = async () => {
         if (!isSelecting) return;
 
-        setIsSelecting(false);
         checkSelection();
-        // 선택 박스 제거 - setSelectionBox(null) 호출 안 함
+        cleanupSelection();
 
-        // 선택 완료 상태를 Firebase에 동기화 (selectingStates 제거)
+        // Firebase에 선택 완료 상태 전송
         if (gameId.current) {
             try {
-                // 선택 상태 동기화 제거 - 타이머 간섭 방지
-                // 선택 영역 전송
                 await set(ref(database, `games/${gameId.current}/selections/${playerId.current}`), selectedCells);
             } catch (error) {
                 console.error('Firebase 선택 완료 상태 업데이트 오류:', error);
@@ -861,30 +866,98 @@ const PartnerMode = ({ onBack }) => {
         }
     };
 
-    // 선택된 셀 업데이트 (줌/스케일 안전)
-    const updateSelectedCells = (left, top, width, height) => {
-        const cells = [];
-        if (!gameBoardRef.current) return;
-        
-        const rect = gameBoardRef.current.getBoundingClientRect();
-        const cellWidth = rect.width / BOARD_SIZE_X;
-        const cellHeight = rect.height / BOARD_SIZE_Y;
-
-        const startCol = Math.max(0, Math.floor(left / cellWidth));
-        const endCol = Math.min(BOARD_SIZE_X - 1, Math.floor((left + width) / cellWidth));
-        const startRow = Math.max(0, Math.floor(top / cellHeight));
-        const endRow = Math.min(BOARD_SIZE_Y - 1, Math.floor((top + height) / cellHeight));
-
-        for (let row = startRow; row <= endRow; row++) {
-            for (let col = startCol; col <= endCol; col++) {
-                if (gameBoard[row] && gameBoard[row][col] !== 0) {
-                    cells.push({ row, col });
-                }
-            }
+    const handleMouseLeave = (e) => {
+        if (isSelecting) {
+            handleMouseUp(e);
         }
+    };
 
-        setSelectedCells(cells);
-    };    // 선택 확인
+    // 선택 상자 생성
+    const createSelectionBox = (x, y) => {
+        const selectionBox = document.createElement('div');
+        selectionBox.className = 'selection-box';
+        selectionBox.style.left = `${x}px`;
+        selectionBox.style.top = `${y}px`;
+        selectionBox.style.width = '0';
+        selectionBox.style.height = '0';
+        
+        gameBoardRef.current.appendChild(selectionBox);
+        selectionBoxRef.current = selectionBox;
+    };
+
+    // 선택 상자 업데이트
+    const updateSelectionBox = (x, y) => {
+        if (!selectionBoxRef.current) return;
+        
+        const { x: startX, y: startY } = startPos.current;
+        const width = Math.abs(x - startX);
+        const height = Math.abs(y - startY);
+        
+        const left = Math.min(startX, x);
+        const top = Math.min(startY, y);
+        
+        selectionBoxRef.current.style.left = `${left}px`;
+        selectionBoxRef.current.style.top = `${top}px`;
+        selectionBoxRef.current.style.width = `${width}px`;
+        selectionBoxRef.current.style.height = `${height}px`;
+    };
+
+    // 선택된 셀 업데이트 (ClassicMode와 동일)
+    const updateSelectedCells = () => {
+        if (!selectionBoxRef.current) return;
+        
+        const selectionRect = selectionBoxRef.current.getBoundingClientRect();
+        const cells = document.querySelectorAll('.apple-cell');
+        const selectedCellsData = [];
+        
+        cells.forEach(cell => {
+            cell.classList.remove('selected');
+            
+            if (!cell.dataset.value) return;
+            
+            const cellRect = cell.getBoundingClientRect();
+            
+            // 셀의 중심점
+            const cellCenterX = cellRect.left + cellRect.width / 2;
+            const cellCenterY = cellRect.top + cellRect.height / 2;
+            
+            // 중심점이 선택 상자 내에 있는지 확인
+            if (
+                cellCenterX >= selectionRect.left &&
+                cellCenterX <= selectionRect.right &&
+                cellCenterY >= selectionRect.top &&
+                cellCenterY <= selectionRect.bottom
+            ) {
+                cell.classList.add('selected');
+                
+                selectedCellsData.push({
+                    row: parseInt(cell.dataset.row),
+                    col: parseInt(cell.dataset.col)
+                });
+            }
+        });
+        
+        setSelectedCells(selectedCellsData);
+    };
+
+    // 선택 상태 완전 정리 (ClassicMode와 동일)
+    const cleanupSelection = () => {
+        // 모든 셀에서 선택 클래스 제거
+        document.querySelectorAll('.apple-cell').forEach(cell => {
+            cell.classList.remove('selected');
+        });
+        
+        // 선택 상자 제거
+        if (selectionBoxRef.current) {
+            selectionBoxRef.current.remove();
+            selectionBoxRef.current = null;
+        }
+        
+        mouseIsDownRef.current = false;
+        setIsSelecting(false);
+    };
+
+    // 선택 확인
     const checkSelection = async () => {
         if (selectedCells.length === 0) return;
 
@@ -949,6 +1022,12 @@ const PartnerMode = ({ onBack }) => {
             clearInterval(timerRef.current);
             clearTimeout(matchingTimer.current);
 
+            // 선택 상자 정리
+            if (selectionBoxRef.current) {
+                selectionBoxRef.current.remove();
+                selectionBoxRef.current = null;
+            }
+
             // Firebase 리스너 정리
             if (gameRef.current) {
                 off(gameRef.current);
@@ -983,13 +1062,17 @@ const PartnerMode = ({ onBack }) => {
                         maxLength="10"
                         onKeyDown={(e) => e.key === 'Enter' && startMatchmaking()}
                     />
-                    <button onClick={startMatchmaking} disabled={gameState === 'matching'}>
+                    <button 
+                        className="primary-button"
+                        onClick={startMatchmaking} 
+                        disabled={gameState === 'matching'}
+                    >
                         게임 시작
                     </button>
                 </div>
                 <div className="status-message">{statusMessage}</div>
                 <div className="player-count">접속자 수: {playerCount}명</div>
-                <button onClick={onBack} style={{ marginTop: '20px', padding: '10px 20px' }}>
+                <button className="secondary-button" onClick={onBack} style={{ marginTop: '20px' }}>
                     뒤로가기
                 </button>
             </div>
@@ -998,7 +1081,7 @@ const PartnerMode = ({ onBack }) => {
 
     // 게임 화면 렌더링
     const renderGame = () => (
-        <div className="partner-game-container">
+        <div className="classic-container">
             <div className="partner-header">
                 <div className="partner-title">사과 상자 게임 - 협동모드</div>
                 <div className="partner-score-display">
@@ -1021,30 +1104,32 @@ const PartnerMode = ({ onBack }) => {
                 </div>
             </div>
 
-            <div className="partner-game-area">
+            <div className="game-area" style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
                 <div
-                    className="partner-game-board"
+                    className="game-board"
                     ref={gameBoardRef}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
-                    onMouseLeave={() => setIsSelecting(false)}
+                    onMouseLeave={handleMouseLeave}
                     style={{
                         gridTemplateColumns: `repeat(${BOARD_SIZE_X}, 1fr)`,
                         gridTemplateRows: `repeat(${BOARD_SIZE_Y}, 1fr)`,
                         minHeight: `${BOARD_SIZE_Y * 45 + 30}px`, // 하단 행이 잘리지 않도록
-                        overflow: 'visible'
+                        overflow: 'visible',
+                        flex: '1'
                     }}
                 >
                     {gameBoard.map((row, rowIndex) =>
                         row.map((cell, colIndex) => (
                             <div
                                 key={`${rowIndex}-${colIndex}`}
-                                className={`cell board-cell ${cell === 0 ? 'empty-cell' : 'apple-cell'} ${
-                                    selectedCells.some(({ row, col }) => row === rowIndex && col === colIndex) ? 'selected' : ''
-                                } ${
+                                className={`board-cell ${cell === 0 ? 'empty-cell' : 'apple-cell'} ${
                                     partnerSelectedCells.some(({ row, col }) => row === rowIndex && col === colIndex) ? 'partner-selected' : ''
                                 }`}
+                                data-row={rowIndex}
+                                data-col={colIndex}
+                                data-value={cell}
                                 style={{
                                     gridColumn: colIndex + 1,
                                     gridRow: rowIndex + 1
@@ -1058,7 +1143,6 @@ const PartnerMode = ({ onBack }) => {
                                         draggable={false}
                                     />
                                 )}
-                                <span className="cell-number">{cell || ''}</span>
                             </div>
                         ))
                     )}
@@ -1066,13 +1150,34 @@ const PartnerMode = ({ onBack }) => {
                     {/* 선택 박스 제거 - 드래그 영역 표시 불필요 */}
                 </div>
 
-                <div className="partner-timer-container">
-                    <div className="partner-timer-display">
-                        <span className="partner-timer-text">{formatTime(remainingTime)}</span>
+                <div className="timer-container" style={{ 
+                    flexShrink: 0, 
+                    width: '80px',
+                    height: `${BOARD_SIZE_Y * 45}px`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
+                }}>
+                    <div className="timer-display" style={{ 
+                        marginBottom: '5px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        height: '25px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <span className="timer-text">{formatTime(remainingTime)}</span>
                     </div>
                     <div
-                        className="partner-timer-bar"
-                        style={{ height: `${(remainingTime / TIMER_DURATION) * 100}%` }}
+                        className="timer-bar"
+                        style={{ 
+                            height: `${(remainingTime / TIMER_DURATION) * 100}%`,
+                            width: '35px',
+                            flex: 1,
+                            maxHeight: `${BOARD_SIZE_Y * 45 - 30}px`
+                        }}
                     />
                 </div>
             </div>
@@ -1094,7 +1199,7 @@ const PartnerMode = ({ onBack }) => {
     );
 
     return (
-        <div className="partner-mode">
+        <div className="classic-container">
             <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'red', color: 'white', padding: '5px', zIndex: 9999 }}>
                 PartnerMode Loaded - State: {gameState}
             </div>
